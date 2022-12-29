@@ -191,6 +191,11 @@ func main() {
 				Usage:   "Verify a CAR is wellformed",
 				Action:  VerifyCar,
 			},
+			{
+				Name:   "test",
+				Usage:  "test build a car from files",
+				Action: CarTest,
+			},
 		},
 	}
 

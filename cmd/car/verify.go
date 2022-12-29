@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"os"
-
 	"github.com/ipfs/go-cid"
 	carv2 "github.com/ipld/go-car/v2"
 	"github.com/ipld/go-car/v2/index"
 	"github.com/multiformats/go-multihash"
 	"github.com/urfave/cli/v2"
+	"io"
+	car "metalib/module/ipfs"
+	"os"
 )
 
 // VerifyCar is a command to check a files validity
@@ -110,5 +110,12 @@ func VerifyCar(c *cli.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func CarTest(c *cli.Context) error {
+	destFile := "./test.car"
+	srcFiles := []string{"./dir0/test0.txt", "./dir1/test1.txt", "./dir2/test2.txt"}
+	car.CreateCarFile(destFile, srcFiles)
 	return nil
 }

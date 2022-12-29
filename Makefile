@@ -16,6 +16,9 @@ car:
 
 build: deps
 
+install:
+	install -C ${BINS}/car /usr/local/bin/car
+
 clean:
 	rm -rf ${BINS}/*
 	$(GOCC) clean
