@@ -1,7 +1,19 @@
 # meta-lib
 
+## Module
 
-## Car
+### API List
+* Create a car file from the given source files.
+```shell script
+func CreateCarFile(destFile string, srcFiles []string) error 
+```
+
+* Extract original files from the given source car file.
+```shell script
+func ExtractCarFile(destDir string, srcCar string) error 
+```
+
+## Command Car
 To build and run:
 ```shell script
 make car
