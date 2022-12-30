@@ -85,26 +85,26 @@ func main() {
 			//		Action: DetachCarList,
 			//	}},
 			//},
-			{
-				Name:    "extract",
-				Aliases: []string{"x"},
-				Usage:   "Extract the contents of a car when the car encodes UnixFS data",
-				Action:  ExtractCar,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:      "file",
-						Aliases:   []string{"f"},
-						Usage:     "The car file to extract from",
-						Required:  true,
-						TakesFile: true,
-					},
-					&cli.BoolFlag{
-						Name:    "verbose",
-						Aliases: []string{"v"},
-						Usage:   "Include verbose information about extracted contents",
-					},
-				},
-			},
+			//{
+			//	Name:    "extract",
+			//	Aliases: []string{"x"},
+			//	Usage:   "Extract the contents of a car when the car encodes UnixFS data",
+			//	Action:  ExtractCar,
+			//	Flags: []cli.Flag{
+			//		&cli.StringFlag{
+			//			Name:      "file",
+			//			Aliases:   []string{"f"},
+			//			Usage:     "The car file to extract from",
+			//			Required:  true,
+			//			TakesFile: true,
+			//		},
+			//		&cli.BoolFlag{
+			//			Name:    "verbose",
+			//			Aliases: []string{"v"},
+			//			Usage:   "Include verbose information about extracted contents",
+			//		},
+			//	},
+			//},
 			//{
 			//	Name:    "filter",
 			//	Aliases: []string{"f"},
