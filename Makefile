@@ -9,15 +9,15 @@ all: build
 deps:
 	go mod tidy
 
-car:
-	rm -f ${BINS}/car
-	$(GOCC) build -o ${BINS}/car ./cmd/car
+meta-car:
+	rm -f ${BINS}/meta-car
+	$(GOCC) build -o ${BINS}/meta-car ./cmd/meta-car
 
 
-build: deps
+build: deps meta-car
 
 install:
-	install -C ${BINS}/car /usr/local/bin/car
+	install -C ${BINS}/meta-car /usr/local/bin/meta-car
 
 clean:
 	rm -rf ${BINS}/*
