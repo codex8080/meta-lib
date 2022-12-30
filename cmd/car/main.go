@@ -194,7 +194,59 @@ func main() {
 			{
 				Name:   "test",
 				Usage:  "test build a car from files",
-				Action: CarTest,
+				Action: CreateCarFileTest,
+			},
+			{
+				Name:  "chunk",
+				Usage: "Generate CAR files of the specified size",
+				Flags: []cli.Flag{
+					&cli.Uint64Flag{
+						Name:  "slice-size",
+						Value: 17179869184, // 16G
+						Usage: "specify chunk piece size",
+					},
+					&cli.UintFlag{
+						Name:  "parallel",
+						Value: 2,
+						Usage: "specify how many number of goroutines runs when generate file node",
+					},
+					&cli.StringFlag{
+						Name:     "graph-name",
+						Required: true,
+						Usage:    "specify graph name",
+					},
+					&cli.StringFlag{
+						Name:     "car-dir",
+						Required: true,
+						Usage:    "specify output CAR directory",
+					},
+					&cli.StringFlag{
+						Name:  "parent-path",
+						Value: "",
+						Usage: "specify graph parent path",
+					},
+					&cli.BoolFlag{
+						Name:  "save-manifest",
+						Value: true,
+						Usage: "create a mainfest.csv in car-dir to save mapping of data-cids and slice names",
+					},
+					&cli.BoolFlag{
+						Name:  "calc-commp",
+						Value: false,
+						Usage: "create a mainfest.csv in car-dir to save mapping of data-cids, slice names, piece-cids and piece-sizes",
+					},
+					&cli.BoolFlag{
+						Name:  "rename",
+						Value: false,
+						Usage: "rename carfile to piece",
+					},
+					&cli.BoolFlag{
+						Name:  "add-padding",
+						Value: false,
+						Usage: "add padding to carfile in order to convert it to piece file",
+					},
+				},
+				Action: Chunk,
 			},
 		},
 	}

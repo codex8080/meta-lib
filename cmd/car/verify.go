@@ -8,6 +8,7 @@ import (
 	"github.com/multiformats/go-multihash"
 	"github.com/urfave/cli/v2"
 	"io"
+	log "metalib/logs"
 	car "metalib/module/ipfs"
 	"os"
 )
@@ -113,9 +114,13 @@ func VerifyCar(c *cli.Context) error {
 	return nil
 }
 
-func CarTest(c *cli.Context) error {
+func CreateCarFileTest(c *cli.Context) error {
 	destFile := "./test.car"
 	srcFiles := []string{"./dir0/test0.txt", "./dir1/test1.txt", "./dir2/test2.txt"}
-	car.CreateCarFile(destFile, srcFiles)
+	if err := car.CreateCarFile(destFile, srcFiles); err != nil {
+		log.GetLog().Error("Test create car file error:", err)
+		return err
+	}
+
 	return nil
 }

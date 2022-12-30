@@ -3,11 +3,11 @@ package module
 import "fmt"
 
 const (
-	MajorVersion = 0
+	MajorVersion = 1
 	MinorVersion = 0
 	FixVersion   = 0
 	CommitHash   = ""
-	VERSION      = "0.0.0"
+	VERSION      = "1.0.0"
 )
 
 func GetVersion() string {

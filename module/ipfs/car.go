@@ -18,7 +18,7 @@ import (
 	"path"
 )
 
-func CreateCarFile(destFile string, srcFiles []string) error {
+func CreateCarFile(destCar string, srcFiles []string) error {
 	var err error
 
 	// make a cid with the right length that we eventually will patch with the root.
@@ -44,7 +44,7 @@ func CreateCarFile(destFile string, srcFiles []string) error {
 		return fmt.Errorf("invalid CAR version")
 	}
 
-	cdest, err := blockstore.OpenReadWrite(destFile, []cid.Cid{proxyRoot}, options...)
+	cdest, err := blockstore.OpenReadWrite(destCar, []cid.Cid{proxyRoot}, options...)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func CreateCarFile(destFile string, srcFiles []string) error {
 		return err
 	}
 	// re-open/finalize with the final root.
-	return car.ReplaceRootsInFile(destFile, []cid.Cid{root})
+	return car.ReplaceRootsInFile(destCar, []cid.Cid{root})
 }
 
 func writeFiles(bs *blockstore.ReadWrite, srcFiles []string) (cid.Cid, error) {
