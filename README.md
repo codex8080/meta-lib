@@ -30,8 +30,7 @@ go get github.com/FogMeta/meta-lib/
 ```
 
 ## API Documentation
-### CreateCarFile
-Create a car file from source files.
+See docs on [pkg.go.dev](https://pkg.go.dev/github.com/ipld/go-car).
 
 ## Examples
 Here is a example for use CreateCarFile of meta-lib.
