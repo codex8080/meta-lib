@@ -336,14 +336,15 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			fileNodeMap[item.Path] = fn
 			lock.Unlock()
 			fmt.Println(item.Path)
-			log.GetLog().Infof("file node: %s", fileNode)
+			stat, _ := fileNode.Stat()
+			log.GetLog().Infof("file node:%s %+v", fileNode, stat)
 		}(i, item)
 	}
 	wg.Wait()
 
 	// build dir tree
 	for _, item := range fileList {
-		// log.Info(item.Path)
+		log.GetLog().Info(item.Path)
 		// log.Infof("file name: %s, file size: %d, item size: %d, seek-start:%d, seek-end:%d", item.Name, item.Info.Size(), item.SeekEnd-item.SeekStart, item.SeekStart, item.SeekEnd)
 		dirStr := path.Dir(item.Path)
 		parentPath = path.Clean(parentPath)
@@ -372,7 +373,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			continue
 		}
 		//log.Info(item.Path)
-		//log.Info(dirList)
+		log.GetLog().Info(dirList)
 		i := len(dirList) - 1
 		for ; i >= 0; i-- {
 			// get dirNodeMap by index
@@ -418,9 +419,9 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 		}
 	}
 
-	for _, node := range dirNodeMap {
-		//fmt.Printf("add node to store: %v\n", node)
-		//fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
+	for key, node := range dirNodeMap {
+		fmt.Printf("add node to store: %v\n", node)
+		fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
 		dagServ.Add(ctx, node)
 	}
 
@@ -453,7 +454,8 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	if err != nil {
 		return nil, "", err
 	}
-	//log.Info(dirNodeMap)
+	log.GetLog().Info("File Node Map:", fileNodeMap)
+	log.GetLog().Info("Dir  Node Map:", dirNodeMap)
 	fmt.Println("++++++++++++ finished to build ipld +++++++++++++")
 	return rootNode, fmt.Sprintf("%s", fsNodeBytes), nil
 }
