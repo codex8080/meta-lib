@@ -249,21 +249,6 @@ func main() {
 						Value: true,
 						Usage: "create a mainfest.csv in car-dir to save mapping of data-cids and slice names",
 					},
-					&cli.BoolFlag{
-						Name:  "calc-commp",
-						Value: false,
-						Usage: "create a mainfest.csv in car-dir to save mapping of data-cids, slice names, piece-cids and piece-sizes",
-					},
-					&cli.BoolFlag{
-						Name:  "rename",
-						Value: false,
-						Usage: "rename carfile to piece",
-					},
-					&cli.BoolFlag{
-						Name:  "add-padding",
-						Value: false,
-						Usage: "add padding to carfile in order to convert it to piece file",
-					},
 				},
 				Action: Chunk,
 			},
