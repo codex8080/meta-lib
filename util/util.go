@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/pborman/uuid"
 	"io"
 	"io/ioutil"
 	log "metalib/logs"
@@ -150,6 +151,7 @@ func ExistDir(path string) bool {
 type Finfo struct {
 	Path      string
 	Name      string
+	Uuid      string
 	Info      os.FileInfo
 	SeekStart int64
 	SeekEnd   int64
@@ -192,6 +194,7 @@ func GetFileListAsync(args []string) chan Finfo {
 				fichan <- Finfo{
 					Path: path,
 					Name: finfo.Name(),
+					Uuid: uuid.New(),
 					Info: finfo,
 				}
 			}

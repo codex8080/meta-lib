@@ -21,6 +21,7 @@ require (
 	github.com/multiformats/go-multicodec v0.7.0
 	github.com/multiformats/go-multihash v0.2.1
 	github.com/multiformats/go-varint v0.0.7
+	github.com/pborman/uuid v1.2.0
 	github.com/polydawn/refmt v0.89.0
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.10.3

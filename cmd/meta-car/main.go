@@ -197,6 +197,10 @@ func main() {
 						Name:  "unixfs",
 						Usage: "List unixfs filesystem from the root of the car",
 					},
+					&cli.BoolFlag{
+						Name:  "links",
+						Usage: "List links from the root of the car",
+					},
 				},
 			},
 			{
