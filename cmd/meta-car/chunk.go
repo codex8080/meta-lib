@@ -11,13 +11,16 @@ import (
 	bstore "github.com/ipfs/go-ipfs-blockstore"
 	chunker "github.com/ipfs/go-ipfs-chunker"
 	offline "github.com/ipfs/go-ipfs-exchange-offline"
+	format "github.com/ipfs/go-ipld-format"
 	ipld "github.com/ipfs/go-ipld-format"
+	"github.com/ipfs/go-merkledag"
 	dag "github.com/ipfs/go-merkledag"
 	"github.com/ipfs/go-unixfs"
 	"github.com/ipfs/go-unixfs/importer/balanced"
 	ihelper "github.com/ipfs/go-unixfs/importer/helpers"
 	"github.com/ipld/go-car"
 	ipldprime "github.com/ipld/go-ipld-prime"
+	basicnode "github.com/ipld/go-ipld-prime/node/basic"
 	"github.com/ipld/go-ipld-prime/traversal/selector"
 	"github.com/ipld/go-ipld-prime/traversal/selector/builder"
 	"github.com/urfave/cli/v2"
@@ -30,11 +33,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"time"
-
-	format "github.com/ipfs/go-ipld-format"
-	"github.com/ipfs/go-merkledag"
-	basicnode "github.com/ipld/go-ipld-prime/node/basic"
 )
 
 func Chunk(c *cli.Context) error {
@@ -428,7 +426,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	rootNode = dirNodeMap[rootKey]
 	//fmt.Printf("root node cid: %s\n", rootNode.Cid())
 	// log.GetLog().Infof("start to generate car for %s", rootNode.Cid())
-	genCarStartTime := time.Now()
+	// genCarStartTime := time.Now()
 	//car
 	carF, err := os.Create(path.Join(carDir, rootNode.Cid().String()+".car"))
 	if err != nil {
