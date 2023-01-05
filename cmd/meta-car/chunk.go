@@ -280,7 +280,7 @@ func BuildIpldGraph(fileList []util.Finfo, graphName, parentPath, carDir string,
 		return
 	}
 	SaveToCsv(carDir, node, graphName, fsDetail)
-	log.GetLog().Info("Build ipld graph result:", "Cid=", node.Cid().String(), " Detail=", fsDetail)
+	//log.GetLog().Info("Build ipld graph result:", "Cid=", node.Cid().String(), " Detail=", fsDetail)
 }
 
 func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel int) (ipld.Node, string, error) {
@@ -303,7 +303,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	var rootKey = "root"
 	dirNodeMap[rootKey] = rootNode
 
-	fmt.Println("************ start to build ipld **************")
+	fmt.Println("************ start to build **************")
 	// build file node
 	// parallel build
 	cpun := runtime.NumCPU()
@@ -335,16 +335,16 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			lock.Lock()
 			fileNodeMap[item.Path] = fn
 			lock.Unlock()
-			fmt.Println(item.Path)
+			// fmt.Println(item.Path)
 			stat, _ := fileNode.Stat()
-			log.GetLog().Infof("file node:%s %+v", fileNode, stat)
+			log.GetLog().Infof("FILE:%s    CID:%s    %+v", item.Path, fileNode, stat)
 		}(i, item)
 	}
 	wg.Wait()
 
 	// build dir tree
 	for _, item := range fileList {
-		log.GetLog().Info(item.Path)
+		// log.GetLog().Info(item.Path)
 		// log.Infof("file name: %s, file size: %d, item size: %d, seek-start:%d, seek-end:%d", item.Name, item.Info.Size(), item.SeekEnd-item.SeekStart, item.SeekStart, item.SeekEnd)
 		dirStr := path.Dir(item.Path)
 		parentPath = path.Clean(parentPath)
@@ -426,8 +426,8 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	}
 
 	rootNode = dirNodeMap[rootKey]
-	fmt.Printf("root node cid: %s\n", rootNode.Cid())
-	log.GetLog().Infof("start to generate car for %s", rootNode.Cid())
+	//fmt.Printf("root node cid: %s\n", rootNode.Cid())
+	// log.GetLog().Infof("start to generate car for %s", rootNode.Cid())
 	genCarStartTime := time.Now()
 	//car
 	carF, err := os.Create(path.Join(carDir, rootNode.Cid().String()+".car"))
@@ -443,7 +443,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	if err != nil {
 		return nil, "", err
 	}
-	log.GetLog().Infof("generate car file completed, time elapsed: %s", time.Now().Sub(genCarStartTime))
+	//log.GetLog().Infof("generate car file completed, time elapsed: %s", time.Now().Sub(genCarStartTime))
 
 	fsBuilder := NewFSBuilder(rootNode, dagServ)
 	fsNode, err := fsBuilder.Build()
@@ -454,9 +454,9 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	if err != nil {
 		return nil, "", err
 	}
-	log.GetLog().Info("File Node Map:", fileNodeMap)
-	log.GetLog().Info("Dir  Node Map:", dirNodeMap)
-	fmt.Println("++++++++++++ finished to build ipld +++++++++++++")
+	// log.GetLog().Info("File Node Map:", fileNodeMap)
+	// log.GetLog().Info("Dir  Node Map:", dirNodeMap)
+	fmt.Println("++++++++++++ finished to build +++++++++++++")
 	return rootNode, fmt.Sprintf("%s", fsNodeBytes), nil
 }
 
