@@ -87,7 +87,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 			// todo build ipld from graphFiles
 			BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 			fmt.Printf("cumu-size: %d\n", cumuSize)
-			fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+			// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
 			fmt.Printf("=================\n")
 			cumuSize = 0
 			graphFiles = make([]util.Finfo, 0)
@@ -113,7 +113,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 			// todo build ipld from graphFiles
 			BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 			fmt.Printf("cumu-size: %d\n", cumuSize+firstCut)
-			fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+			// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
 			fmt.Printf("=================\n")
 			cumuSize = 0
 			graphFiles = make([]util.Finfo, 0)
@@ -139,7 +139,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 					// todo build ipld from graphFiles
 					BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 					fmt.Printf("cumu-size: %d\n", sliceSize)
-					fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+					// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
 					fmt.Printf("=================\n")
 					cumuSize = 0
 					graphFiles = make([]util.Finfo, 0)
@@ -153,7 +153,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 		// todo build ipld from graphFiles
 		BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 		fmt.Printf("cumu-size: %d\n", cumuSize)
-		fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+		// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
 		fmt.Printf("=================\n")
 	}
 	return nil
