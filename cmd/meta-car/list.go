@@ -284,7 +284,6 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 			_, l := i.Next()
 			name := path.Join(prefix, l.Name.Must().String())
 			size := l.Tsize.Must().Int()
-			//cid := l.Hash.String()
 			nameLen := len(name)
 			uuid := ""
 			uuidLen := len("-ce547c40-acf9-11e6-80f5-76304dec7eb7")
@@ -293,13 +292,14 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 				uuid = name[nameLen-uuidLen+1:]
 				name = name[:nameLen-uuidLen]
 			}
-			fmt.Fprintf(outStream, "FILE:%s     UUID:%s     SIZE:%d\n", name, uuid, size)
+
 			// recurse into the file/directory
 			cl, err := l.Hash.AsLink()
 			if err != nil {
 				return err
 			}
 			if cidl, ok := cl.(cidlink.Link); ok {
+				fmt.Fprintf(outStream, "FILE:%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
 				if err := printLinksNode(c, name, cidl.Cid, ls, outStream); err != nil {
 					return err
 				}
