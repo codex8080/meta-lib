@@ -234,9 +234,9 @@ func main() {
 						Usage: "specify how many number of goroutines runs when generate file node",
 					},
 					&cli.StringFlag{
-						Name:     "graph-name",
-						Required: true,
-						Usage:    "specify graph name",
+						Name:  "graph-name",
+						Value: "meta",
+						Usage: "specify graph name",
 					},
 					&cli.StringFlag{
 						Name:     "car-dir",
