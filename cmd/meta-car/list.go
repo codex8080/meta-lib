@@ -277,13 +277,23 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 	if err != nil {
 		return err
 	}
-
+	//fmt.Fprintf(outStream, "UFD: %+v\nFILESIZE: %d\n", ufd, ufd.FileSize)
 	if ufd.FieldDataType().Int() == data.Data_Directory {
 		i := pbnode.Links.Iterator()
 		for !i.Done() {
 			_, l := i.Next()
 			name := path.Join(prefix, l.Name.Must().String())
-			fmt.Fprintf(outStream, "%s\n", name)
+			size := l.Tsize.Must().Int()
+			//cid := l.Hash.String()
+			nameLen := len(name)
+			uuid := ""
+			uuidLen := len("-ce547c40-acf9-11e6-80f5-76304dec7eb7")
+			// TODO: split uuid string and check it
+			if nameLen > uuidLen {
+				uuid = name[nameLen-uuidLen+1:]
+				name = name[:nameLen-uuidLen]
+			}
+			fmt.Fprintf(outStream, "FILE:%s     UUID:%s     SIZE:%d\n", name, uuid, size)
 			// recurse into the file/directory
 			cl, err := l.Hash.AsLink()
 			if err != nil {
@@ -304,7 +314,7 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 		i := hn.Iterator()
 		for !i.Done() {
 			n, l := i.Next()
-			fmt.Fprintf(outStream, "%s\n", path.Join(prefix, n.String()))
+			fmt.Fprintf(outStream, "HAMT: %s\n", path.Join(prefix, n.String()))
 			// recurse into the file/directory
 			cl, err := l.AsLink()
 			if err != nil {
