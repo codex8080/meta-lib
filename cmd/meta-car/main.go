@@ -220,7 +220,7 @@ func main() {
 				Action: CreateCarFileTest,
 			},
 			{
-				Name:  "chunk",
+				Name:  "build",
 				Usage: "Generate CAR files of the specified size",
 				Flags: []cli.Flag{
 					&cli.Uint64Flag{
