@@ -35,7 +35,7 @@ import (
 	"sync"
 )
 
-func Chunk(c *cli.Context) error {
+func CarBuild(c *cli.Context) error {
 	parallel := c.Uint("parallel")
 	sliceSize := c.Uint64("slice-size")
 	parentPath := c.String("parent-path")

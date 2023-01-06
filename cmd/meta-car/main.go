@@ -254,7 +254,29 @@ func main() {
 						Usage: "create a mainfest.csv in car-dir to save mapping of data-cids and slice names",
 					},
 				},
-				Action: Chunk,
+				Action: CarBuild,
+			},
+			{
+				Name:  "restore",
+				Usage: "Restore files from CAR files",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "car-path",
+						Required: true,
+						Usage:    "specify source car path, directory or file",
+					},
+					&cli.StringFlag{
+						Name:     "output-dir",
+						Required: true,
+						Usage:    "specify output directory",
+					},
+					&cli.IntFlag{
+						Name:  "parallel",
+						Value: 2,
+						Usage: "specify how many number of goroutines runs when generate file node",
+					},
+				},
+				Action: Restore,
 			},
 		},
 	}
