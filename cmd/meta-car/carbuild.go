@@ -88,7 +88,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 			BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 			fmt.Printf("cumu-size: %d\n", cumuSize)
 			// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-			fmt.Printf("=================\n")
+			// fmt.Printf("=================\n")
 			cumuSize = 0
 			graphFiles = make([]util.Finfo, 0)
 			graphSliceCount++
@@ -114,7 +114,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 			BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 			fmt.Printf("cumu-size: %d\n", cumuSize+firstCut)
 			// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-			fmt.Printf("=================\n")
+			// fmt.Printf("=================\n")
 			cumuSize = 0
 			graphFiles = make([]util.Finfo, 0)
 			graphSliceCount++
@@ -125,7 +125,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 					seekEnd = fileSize - 1
 				}
 				fmt.Printf("following cut %d, seek start at %d, end at %d", seekEnd-seekStart+1, seekStart, seekEnd)
-				fmt.Printf("----------------\n")
+				// fmt.Printf("----------------\n")
 				cumuSize += seekEnd - seekStart + 1
 				graphFiles = append(graphFiles, util.Finfo{
 					Path:      item.Path,
@@ -140,7 +140,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 					BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 					fmt.Printf("cumu-size: %d\n", sliceSize)
 					// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-					fmt.Printf("=================\n")
+					// fmt.Printf("=================\n")
 					cumuSize = 0
 					graphFiles = make([]util.Finfo, 0)
 					graphSliceCount++
@@ -154,7 +154,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 		BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
 		fmt.Printf("cumu-size: %d\n", cumuSize)
 		// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-		fmt.Printf("=================\n")
+		// fmt.Printf("=================\n")
 	}
 	return nil
 }
@@ -301,7 +301,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	var rootKey = "root"
 	dirNodeMap[rootKey] = rootNode
 
-	fmt.Println("************ start to build **************")
+	// fmt.Println("************ start to build **************")
 	// build file node
 	// parallel build
 	cpun := runtime.NumCPU()
@@ -417,9 +417,9 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 		}
 	}
 
-	for key, node := range dirNodeMap {
-		fmt.Printf("add node to store: %v\n", node)
-		fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
+	for _, node := range dirNodeMap {
+		// fmt.Printf("add node to store: %v\n", node)
+		// fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
 		dagServ.Add(ctx, node)
 	}
 
@@ -454,7 +454,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 	}
 	// log.GetLog().Info("File Node Map:", fileNodeMap)
 	// log.GetLog().Info("Dir  Node Map:", dirNodeMap)
-	fmt.Println("++++++++++++ finished to build +++++++++++++")
+	// fmt.Println("++++++++++++ finished to build +++++++++++++")
 	return rootNode, fmt.Sprintf("%s", fsNodeBytes), nil
 }
 
