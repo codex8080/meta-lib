@@ -16,11 +16,12 @@ import (
 	"runtime"
 )
 
-func ListCarFile(destCar string) error {
+func ListCarFile(destCar string) ([]string, error) {
+	infoList := make([]string, 0)
 
 	bs, err := blockstore.OpenReadOnly(destCar)
 	if err != nil {
-		return err
+		return infoList, err
 	}
 	ls := cidlink.DefaultLinkSystem()
 	ls.TrustedStorage = true
@@ -39,16 +40,16 @@ func ListCarFile(destCar string) error {
 
 	roots, err := bs.Roots()
 	if err != nil {
-		return err
+		return infoList, err
 	}
-	infoList := make([]string, 0)
+
 	for _, r := range roots {
 		if err := printLinksNode("", r, &ls, infoList); err != nil {
-			return err
+			return infoList, err
 		}
 	}
 
-	return nil
+	return infoList, nil
 }
 
 func GetCarRoot(destCar string) (string, error) {
