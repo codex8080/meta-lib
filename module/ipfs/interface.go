@@ -99,11 +99,11 @@ func GenerateCarFileWithUuid(outputDir string, srcFiles []string, uuid []string,
 		return "", xerrors.Errorf("Total files size has been bigger than sliceSize(%u)", sliceSize)
 	}
 
-	root, detailJson, err := doGenerateCarWithUuid(outputDir, srcFiles, uuid)
+	carFileName, detailJson, err := doGenerateCarWithUuid(outputDir, srcFiles, uuid)
 	if err != nil {
 		return "", err
 	}
 
 	log.GetLog().Info(detailJson)
-	return root, nil
+	return carFileName, nil
 }

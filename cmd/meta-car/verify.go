@@ -11,6 +11,7 @@ import (
 	log "metalib/logs"
 	meta_car "metalib/module/ipfs"
 	"os"
+	"path"
 )
 
 // VerifyCar is a command to check a files validity
@@ -137,6 +138,7 @@ func genCarWithUuidTest() {
 		"/test/input/test0",
 		"/test/input/test4",
 		"/test/input/dir1/test1",
+		"/test/input/dir1/dir2/test2",
 		"/test/input/dir1/dir2/test3",
 	}
 	uuid := []string{
@@ -144,16 +146,17 @@ func genCarWithUuidTest() {
 		"uuid-571e4e2b-d50b-4ac2-a89f-07795b684148",
 		"uuid-36f4da38-a028-493a-a855-51b07269e709",
 		"uuid-e99d2819-09a8-4e53-8158-a48d8154e057",
+		"uuid-6631aa2a-5e89-4f98-b114-86bf4403f1c2",
 	}
 	sliceSize := 17179869184
 
-	root, err := meta_car.GenerateCarFileWithUuid(outputDir, srcFiles, uuid, int64(sliceSize))
+	carFileName, err := meta_car.GenerateCarFileWithUuid(outputDir, srcFiles, uuid, int64(sliceSize))
 	if err != nil {
 		log.GetLog().Error("Test create car file error:", err)
 		return
 	}
 
-	log.GetLog().Info("root:", root)
+	log.GetLog().Info("create car file is:", path.Join(outputDir, carFileName))
 
 	/*
 

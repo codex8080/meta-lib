@@ -722,7 +722,7 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 			dir := dirList[i]
 			dirKey := getDirKey(dirList, i)
 			//log.GetLog().Info(dirList)
-			log.GetLog().Infof("dirKey: %s", dirKey)
+			//log.GetLog().Infof("dirKey: %s", dirKey)
 			dirNode, ok = dirNodeMap[dirKey]
 			if !ok {
 				dirNode = unixfs.EmptyDirNode()
@@ -738,7 +738,7 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 			} else {
 				parentKey = getDirKey(dirList, i-1)
 			}
-			log.GetLog().Infof("parentKey: %s", parentKey)
+			//log.GetLog().Infof("parentKey: %s", parentKey)
 			parentNode, ok = dirNodeMap[parentKey]
 			if !ok {
 				parentNode = unixfs.EmptyDirNode()
@@ -764,7 +764,8 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 	}
 
 	rootNode = dirNodeMap[rootKey]
-	carF, err := os.Create(path.Join(outputPath, rootNode.Cid().String()+".car"))
+	carFileName := path.Join(outputPath, rootNode.Cid().String()+".car")
+	carF, err := os.Create(carFileName)
 	if err != nil {
 		return "", "", err
 	}
@@ -789,5 +790,5 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 	}
 	detail := fmt.Sprintf("%s", fsNodeBytes)
 
-	return rootNode.Cid().String(), detail, nil
+	return carFileName, detail, nil
 }
