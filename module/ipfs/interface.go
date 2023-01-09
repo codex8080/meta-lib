@@ -89,21 +89,21 @@ func GenerateCarFile(destCar string, srcFiles []string) error {
 	return nil
 }
 
-func GenerateCarFileWithUuid(targetDir string, srcFiles []string, uuid []string, sliceSize int64) (string, string, error) {
+func GenerateCarFileWithUuid(outputDir string, srcFiles []string, uuid []string, sliceSize int64) (string, error) {
 
 	if len(srcFiles) != len(uuid) {
-		return "", "", xerrors.Errorf("The len of source files and uuids do not match.")
+		return "", xerrors.Errorf("The len of source files and uuids do not match.")
 	}
 
 	if !checkFiles(srcFiles, sliceSize) {
-		return "", "", xerrors.Errorf("Total files size has been bigger than sliceSize(%u)", sliceSize)
+		return "", xerrors.Errorf("Total files size has been bigger than sliceSize(%u)", sliceSize)
 	}
 
-	root, detailJson, err := doGenerateCarWithUuid(targetDir, srcFiles, uuid)
+	root, detailJson, err := doGenerateCarWithUuid(outputDir, srcFiles, uuid)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	log.GetLog().Info(detailJson)
-	return root, detailJson, nil
+	return root, nil
 }

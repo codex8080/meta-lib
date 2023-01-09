@@ -132,27 +132,32 @@ func carFileTest() {
 }
 
 func genCarWithUuidTest() {
-	targetFile := "/home/nbfs/liqh/metalib/meta-lib/test/input"
+	outputDir := "/test/output"
 	srcFiles := []string{
-		"/home/nbfs/liqh/metalib/meta-lib/test/input/test0",
-		"/home/nbfs/liqh/metalib/meta-lib/test/input/test4",
-		"/home/nbfs/liqh/metalib/meta-lib/test/input/dir1/test1",
-		"/home/nbfs/liqh/metalib/meta-lib/test/input/dir1/dir2/test3",
+		"/test/input/test0",
+		"/test/input/test4",
+		"/test/input/dir1/test1",
+		"/test/input/dir1/dir2/test3",
 	}
 	uuid := []string{
-		"94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
-		"571e4e2b-d50b-4ac2-a89f-07795b684148",
-		"36f4da38-a028-493a-a855-51b07269e709",
-		"e99d2819-09a8-4e53-8158-a48d8154e057",
+		"uuid-94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
+		"uuid-571e4e2b-d50b-4ac2-a89f-07795b684148",
+		"uuid-36f4da38-a028-493a-a855-51b07269e709",
+		"uuid-e99d2819-09a8-4e53-8158-a48d8154e057",
 	}
 	sliceSize := 17179869184
 
-	root, detail, err := meta_car.GenerateCarFileWithUuid(targetFile, srcFiles, uuid, int64(sliceSize))
+	root, err := meta_car.GenerateCarFileWithUuid(outputDir, srcFiles, uuid, int64(sliceSize))
 	if err != nil {
 		log.GetLog().Error("Test create car file error:", err)
 		return
 	}
 
-	log.GetLog().Info("root:", root, " detail:", detail)
+	log.GetLog().Info("root:", root)
+
+	/*
+
+
+	 */
 
 }
