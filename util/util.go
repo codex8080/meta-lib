@@ -157,7 +157,7 @@ type Finfo struct {
 	SeekEnd   int64
 }
 
-func GetFileListAsync(args []string) chan Finfo {
+func GetFileListAsync(args []string, isUuid bool) chan Finfo {
 	fichan := make(chan Finfo, 0)
 	go func() {
 		defer close(fichan)
@@ -181,7 +181,7 @@ func GetFileListAsync(args []string) chan Finfo {
 				for _, n := range files {
 					templist = append(templist, fmt.Sprintf("%s/%s", path, n.Name()))
 				}
-				embededChan := GetFileListAsync(templist)
+				embededChan := GetFileListAsync(templist, isUuid)
 				if err != nil {
 					log.GetLog().Warn(err)
 					return
@@ -191,10 +191,16 @@ func GetFileListAsync(args []string) chan Finfo {
 					fichan <- item
 				}
 			} else {
+
+				uuidStr := ""
+				if isUuid {
+					uuidStr = "uuid-" + uuid.New()
+				}
+
 				fichan <- Finfo{
 					Path: path,
 					Name: finfo.Name(),
-					Uuid: uuid.New(),
+					Uuid: uuidStr,
 					Info: finfo,
 				}
 			}
