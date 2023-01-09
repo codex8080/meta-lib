@@ -115,13 +115,44 @@ func VerifyCar(c *cli.Context) error {
 }
 
 func CreateCarFileTest(c *cli.Context) error {
-	destFile := "./test.car"
-	srcFiles := []string{"./dir0/test0.txt", "./dir1/test1.txt", "./dir2/test2.txt"}
-	
-	if err := meta_car.CreateCarFile(destFile, srcFiles); err != nil {
-		log.GetLog().Error("Test create car file error:", err)
-		return err
-	}
+	genCarWithUuidTest()
 
 	return nil
+}
+
+func carFileTest() {
+	destFile := "./test.car"
+	srcFiles := []string{"./dir0/test0.txt", "./dir1/test1.txt", "./dir2/test2.txt"}
+
+	if err := meta_car.CreateCarFile(destFile, srcFiles); err != nil {
+		log.GetLog().Error("Test create car file error:", err)
+		return
+	}
+
+}
+
+func genCarWithUuidTest() {
+	targetFile := "/home/nbfs/liqh/metalib/meta-lib/test/input"
+	srcFiles := []string{
+		"/home/nbfs/liqh/metalib/meta-lib/test/input/test0",
+		"/home/nbfs/liqh/metalib/meta-lib/test/input/test4",
+		"/home/nbfs/liqh/metalib/meta-lib/test/input/dir1/test1",
+		"/home/nbfs/liqh/metalib/meta-lib/test/input/dir1/dir2/test3",
+	}
+	uuid := []string{
+		"94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
+		"571e4e2b-d50b-4ac2-a89f-07795b684148",
+		"36f4da38-a028-493a-a855-51b07269e709",
+		"e99d2819-09a8-4e53-8158-a48d8154e057",
+	}
+	sliceSize := 17179869184
+
+	root, detail, err := meta_car.GenerateCarFileWithUuid(targetFile, srcFiles, uuid, int64(sliceSize))
+	if err != nil {
+		log.GetLog().Error("Test create car file error:", err)
+		return
+	}
+
+	log.GetLog().Info("root:", root, " detail:", detail)
+
 }
