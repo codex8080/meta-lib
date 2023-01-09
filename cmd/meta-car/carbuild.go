@@ -11,34 +11,151 @@ import (
 	bstore "github.com/ipfs/go-ipfs-blockstore"
 	chunker "github.com/ipfs/go-ipfs-chunker"
 	offline "github.com/ipfs/go-ipfs-exchange-offline"
+	format "github.com/ipfs/go-ipld-format"
 	ipld "github.com/ipfs/go-ipld-format"
+	"github.com/ipfs/go-merkledag"
 	dag "github.com/ipfs/go-merkledag"
 	"github.com/ipfs/go-unixfs"
 	"github.com/ipfs/go-unixfs/importer/balanced"
 	ihelper "github.com/ipfs/go-unixfs/importer/helpers"
 	"github.com/ipld/go-car"
 	ipldprime "github.com/ipld/go-ipld-prime"
+	basicnode "github.com/ipld/go-ipld-prime/node/basic"
 	"github.com/ipld/go-ipld-prime/traversal/selector"
 	"github.com/ipld/go-ipld-prime/traversal/selector/builder"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/xerrors"
 	"io"
-	"io/ioutil"
 	log "metalib/logs"
+	"metalib/util"
 	"os"
 	"path"
 	"runtime"
 	"strings"
 	"sync"
-	"time"
-
-	format "github.com/ipfs/go-ipld-format"
-	"github.com/ipfs/go-merkledag"
-	basicnode "github.com/ipld/go-ipld-prime/node/basic"
 )
 
-func Chunk(c *cli.Context) error {
+func CarBuild(c *cli.Context) error {
+	parallel := c.Uint("parallel")
+	sliceSize := c.Uint64("slice-size")
+	parentPath := c.String("parent-path")
+	carDir := c.String("car-dir")
+	if !util.ExistDir(carDir) {
+		return xerrors.Errorf("Unexpected! The path of car-dir does not exist")
+	}
+	graphName := c.String("graph-name")
+	if sliceSize == 0 {
+		return xerrors.Errorf("Unexpected! Slice size has been set as 0")
+	}
+	targetPath := c.Args().First()
 
+	doChunk(int64(sliceSize), parentPath, targetPath, carDir, graphName, int(parallel))
+
+	return nil
+}
+
+func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, parallel int) error {
+	var cumuSize int64 = 0
+	graphSliceCount := 0
+	graphFiles := make([]util.Finfo, 0)
+	if sliceSize == 0 {
+		return xerrors.Errorf("Unexpected! Slice size has been set as 0")
+	}
+	if parallel <= 0 {
+		return xerrors.Errorf("Unexpected! Parallel has to be greater than 0")
+	}
+	if parentPath == "" {
+		parentPath = targetPath
+	}
+
+	args := []string{targetPath}
+	sliceTotal := GetGraphCount(args, sliceSize)
+	if sliceTotal == 0 {
+		log.GetLog().Warn("Empty folder or file!")
+		return nil
+	}
+	files := util.GetFileListAsync(args)
+	for item := range files {
+		fileSize := item.Info.Size()
+		switch {
+		case cumuSize+fileSize < sliceSize:
+			cumuSize += fileSize
+			graphFiles = append(graphFiles, item)
+		case cumuSize+fileSize == sliceSize:
+			cumuSize += fileSize
+			graphFiles = append(graphFiles, item)
+			// todo build ipld from graphFiles
+			BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
+			fmt.Printf("cumu-size: %d\n", cumuSize)
+			// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+			// fmt.Printf("=================\n")
+			cumuSize = 0
+			graphFiles = make([]util.Finfo, 0)
+			graphSliceCount++
+		case cumuSize+fileSize > sliceSize:
+			fileSliceCount := 0
+			// need to split item to fit graph slice
+			//
+			// first cut
+			firstCut := sliceSize - cumuSize
+			var seekStart int64 = 0
+			var seekEnd int64 = seekStart + firstCut - 1
+			fmt.Printf("first cut %d, seek start at %d, end at %d", firstCut, seekStart, seekEnd)
+			fmt.Printf("----------------\n")
+			graphFiles = append(graphFiles, util.Finfo{
+				Path:      item.Path,
+				Name:      fmt.Sprintf("%s.%08d", item.Info.Name(), fileSliceCount),
+				Info:      item.Info,
+				SeekStart: seekStart,
+				SeekEnd:   seekEnd,
+			})
+			fileSliceCount++
+			// todo build ipld from graphFiles
+			BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
+			fmt.Printf("cumu-size: %d\n", cumuSize+firstCut)
+			// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+			// fmt.Printf("=================\n")
+			cumuSize = 0
+			graphFiles = make([]util.Finfo, 0)
+			graphSliceCount++
+			for seekEnd < fileSize-1 {
+				seekStart = seekEnd + 1
+				seekEnd = seekStart + sliceSize - 1
+				if seekEnd >= fileSize-1 {
+					seekEnd = fileSize - 1
+				}
+				fmt.Printf("following cut %d, seek start at %d, end at %d", seekEnd-seekStart+1, seekStart, seekEnd)
+				// fmt.Printf("----------------\n")
+				cumuSize += seekEnd - seekStart + 1
+				graphFiles = append(graphFiles, util.Finfo{
+					Path:      item.Path,
+					Name:      fmt.Sprintf("%s.%08d", item.Info.Name(), fileSliceCount),
+					Info:      item.Info,
+					SeekStart: seekStart,
+					SeekEnd:   seekEnd,
+				})
+				fileSliceCount++
+				if seekEnd-seekStart == sliceSize-1 {
+					// todo build ipld from graphFiles
+					BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
+					fmt.Printf("cumu-size: %d\n", sliceSize)
+					// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+					// fmt.Printf("=================\n")
+					cumuSize = 0
+					graphFiles = make([]util.Finfo, 0)
+					graphSliceCount++
+				}
+			}
+
+		}
+	}
+	if cumuSize > 0 {
+		// todo build ipld from graphFiles
+		BuildIpldGraph(graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel)
+		fmt.Printf("cumu-size: %d\n", cumuSize)
+		// fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+		// fmt.Printf("=================\n")
+	}
 	return nil
 }
 
@@ -47,14 +164,6 @@ const UnixfsLinksPerLevel = 1 << 10
 
 // 1M 1024*1024
 const UnixfsChunkSize uint64 = 1 << 20
-
-type Finfo struct {
-	Path      string
-	Name      string
-	Info      os.FileInfo
-	SeekStart int64
-	SeekEnd   int64
-}
 
 // file system tree node
 type fsNode struct {
@@ -135,62 +244,44 @@ func (b *FSBuilder) getNodeByLink(ln *format.Link) (fn fsNode, err error) {
 	return
 }
 
-func GetFileListAsync(args []string) chan Finfo {
-	fichan := make(chan Finfo, 0)
-	go func() {
-		defer close(fichan)
-		for _, path := range args {
-			finfo, err := os.Stat(path)
-			if err != nil {
-				log.GetLog().Warn(err)
-				return
-			}
-			//Ignore hidden directories
-			if strings.HasPrefix(finfo.Name(), ".") {
-				continue
-			}
-			if finfo.IsDir() {
-				files, err := ioutil.ReadDir(path)
-				if err != nil {
-					log.GetLog().Warn(err)
-					return
-				}
-				templist := make([]string, 0)
-				for _, n := range files {
-					templist = append(templist, fmt.Sprintf("%s/%s", path, n.Name()))
-				}
-				embededChan := GetFileListAsync(templist)
-				if err != nil {
-					log.GetLog().Warn(err)
-					return
-				}
-
-				for item := range embededChan {
-					fichan <- item
-				}
-			} else {
-				fichan <- Finfo{
-					Path: path,
-					Name: finfo.Name(),
-					Info: finfo,
-				}
-			}
-		}
-	}()
-
-	return fichan
+func GenGraphName(graphName string, sliceCount, sliceTotal int) string {
+	if sliceTotal == 1 {
+		return fmt.Sprintf("%s.car", graphName)
+	}
+	return fmt.Sprintf("%s-total-%d-part-%d.car", graphName, sliceTotal, sliceCount+1)
 }
 
-func BuildIpldGraph(fileList []Finfo, graphName, parentPath, carDir string, parallel int) {
-	_, _, err := buildIpldGraph(fileList, parentPath, carDir, parallel)
+func GetGraphCount(args []string, sliceSize int64) int {
+	list, err := util.GetFileList(args)
 	if err != nil {
-		//log.Fatal(err)
+		panic(err)
+	}
+	var totalSize int64 = 0
+	for _, path := range list {
+		finfo, err := os.Stat(path)
+		if err != nil {
+			panic(err)
+		}
+		totalSize += finfo.Size()
+	}
+	if totalSize == 0 {
+		return 0
+	}
+	count := (totalSize / sliceSize) + 1
+	return int(count)
+}
+
+func BuildIpldGraph(fileList []util.Finfo, graphName, parentPath, carDir string, parallel int) {
+	node, fsDetail, err := buildIpldGraph(fileList, parentPath, carDir, parallel)
+	if err != nil {
+		log.GetLog().Fatal(err)
 		return
 	}
-	//cb.OnSuccess(node, graphName, fsDetail)
+	SaveToCsv(carDir, node, graphName, fsDetail)
+	//log.GetLog().Info("Build ipld graph result:", "Cid=", node.Cid().String(), " Detail=", fsDetail)
 }
 
-func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (ipld.Node, string, error) {
+func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel int) (ipld.Node, string, error) {
 
 	ctx := context.Background()
 
@@ -210,7 +301,7 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 	var rootKey = "root"
 	dirNodeMap[rootKey] = rootNode
 
-	fmt.Println("************ start to build ipld **************")
+	// fmt.Println("************ start to build **************")
 	// build file node
 	// parallel build
 	cpun := runtime.NumCPU()
@@ -222,7 +313,7 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 	lock := sync.Mutex{}
 	for i, item := range fileList {
 		wg.Add(1)
-		go func(i int, item Finfo) {
+		go func(i int, item util.Finfo) {
 			defer func() {
 				<-pchan
 				wg.Done()
@@ -242,15 +333,16 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 			lock.Lock()
 			fileNodeMap[item.Path] = fn
 			lock.Unlock()
-			fmt.Println(item.Path)
-			log.GetLog().Infof("file node: %s", fileNode)
+			// fmt.Println(item.Path)
+			stat, _ := fileNode.Stat()
+			log.GetLog().Infof("FILE:%s    CID:%s    UUID:uuid-%s      SIZE:%d\n", item.Path, fileNode, item.Uuid, stat.CumulativeSize)
 		}(i, item)
 	}
 	wg.Wait()
 
 	// build dir tree
 	for _, item := range fileList {
-		// log.Info(item.Path)
+		// log.GetLog().Info(item.Path)
 		// log.Infof("file name: %s, file size: %d, item size: %d, seek-start:%d, seek-end:%d", item.Name, item.Info.Size(), item.SeekEnd-item.SeekStart, item.SeekStart, item.SeekEnd)
 		dirStr := path.Dir(item.Path)
 		parentPath = path.Clean(parentPath)
@@ -275,11 +367,11 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 			panic("unexpected, missing file node")
 		}
 		if len(dirList) == 0 {
-			dirNodeMap[rootKey].AddNodeLink(item.Name, fileNode)
+			dirNodeMap[rootKey].AddNodeLink(item.Name+"-uuid-"+item.Uuid, fileNode)
 			continue
 		}
 		//log.Info(item.Path)
-		//log.Info(dirList)
+		log.GetLog().Info(dirList)
 		i := len(dirList) - 1
 		for ; i >= 0; i-- {
 			// get dirNodeMap by index
@@ -299,7 +391,7 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 			}
 			// add file node to its nearest parent node
 			if i == len(dirList)-1 {
-				dirNode.AddNodeLink(item.Name, fileNode)
+				dirNode.AddNodeLink(item.Name+"-uuid-"+item.Uuid, fileNode)
 			}
 			if i == 0 {
 				parentKey = rootKey
@@ -326,15 +418,15 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 	}
 
 	for _, node := range dirNodeMap {
-		//fmt.Printf("add node to store: %v\n", node)
-		//fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
+		// fmt.Printf("add node to store: %v\n", node)
+		// fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
 		dagServ.Add(ctx, node)
 	}
 
 	rootNode = dirNodeMap[rootKey]
-	fmt.Printf("root node cid: %s\n", rootNode.Cid())
-	log.GetLog().Infof("start to generate car for %s", rootNode.Cid())
-	genCarStartTime := time.Now()
+	//fmt.Printf("root node cid: %s\n", rootNode.Cid())
+	// log.GetLog().Infof("start to generate car for %s", rootNode.Cid())
+	// genCarStartTime := time.Now()
 	//car
 	carF, err := os.Create(path.Join(carDir, rootNode.Cid().String()+".car"))
 	if err != nil {
@@ -349,7 +441,7 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 	if err != nil {
 		return nil, "", err
 	}
-	log.GetLog().Infof("generate car file completed, time elapsed: %s", time.Now().Sub(genCarStartTime))
+	//log.GetLog().Infof("generate car file completed, time elapsed: %s", time.Now().Sub(genCarStartTime))
 
 	fsBuilder := NewFSBuilder(rootNode, dagServ)
 	fsNode, err := fsBuilder.Build()
@@ -360,8 +452,9 @@ func buildIpldGraph(fileList []Finfo, parentPath, carDir string, parallel int) (
 	if err != nil {
 		return nil, "", err
 	}
-	//log.Info(dirNodeMap)
-	fmt.Println("++++++++++++ finished to build ipld +++++++++++++")
+	// log.GetLog().Info("File Node Map:", fileNodeMap)
+	// log.GetLog().Info("Dir  Node Map:", dirNodeMap)
+	// fmt.Println("++++++++++++ finished to build +++++++++++++")
 	return rootNode, fmt.Sprintf("%s", fsNodeBytes), nil
 }
 
@@ -441,7 +534,7 @@ func (fs *fileSlice) Read(p []byte) (n int, err error) {
 	return copy(p, b), io.EOF
 }
 
-func BuildFileNode(item Finfo, bufDs ipld.DAGService, cidBuilder cid.Builder) (node ipld.Node, err error) {
+func BuildFileNode(item util.Finfo, bufDs ipld.DAGService, cidBuilder cid.Builder) (node ipld.Node, err error) {
 	var r io.Reader
 	f, err := os.Open(item.Path)
 	if err != nil {
@@ -475,4 +568,30 @@ func BuildFileNode(item Finfo, bufDs ipld.DAGService, cidBuilder cid.Builder) (n
 		return nil, err
 	}
 	return
+}
+
+func SaveToCsv(carDir string, node ipld.Node, graphName, fsDetail string) {
+	// Add node inof to manifest.csv
+	manifestPath := path.Join(carDir, "manifest.csv")
+	_, err := os.Stat(manifestPath)
+	if err != nil && !os.IsNotExist(err) {
+		log.GetLog().Fatal(err)
+	}
+	var isCreateAction bool
+	if err != nil && os.IsNotExist(err) {
+		isCreateAction = true
+	}
+	f, err := os.OpenFile(manifestPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.GetLog().Fatal(err)
+	}
+	defer f.Close()
+	if isCreateAction {
+		if _, err := f.Write([]byte("playload_cid,filename,detail\n")); err != nil {
+			log.GetLog().Fatal(err)
+		}
+	}
+	if _, err := f.Write([]byte(fmt.Sprintf("%s,%s,%s\n", node.Cid(), graphName, fsDetail))); err != nil {
+		log.GetLog().Fatal(err)
+	}
 }

@@ -197,6 +197,10 @@ func main() {
 						Name:  "unixfs",
 						Usage: "List unixfs filesystem from the root of the car",
 					},
+					&cli.BoolFlag{
+						Name:  "links",
+						Usage: "List links from the root of the car",
+					},
 				},
 			},
 			{
@@ -216,7 +220,7 @@ func main() {
 				Action: CreateCarFileTest,
 			},
 			{
-				Name:  "chunk",
+				Name:  "build",
 				Usage: "Generate CAR files of the specified size",
 				Flags: []cli.Flag{
 					&cli.Uint64Flag{
@@ -230,9 +234,9 @@ func main() {
 						Usage: "specify how many number of goroutines runs when generate file node",
 					},
 					&cli.StringFlag{
-						Name:     "graph-name",
-						Required: true,
-						Usage:    "specify graph name",
+						Name:  "graph-name",
+						Value: "meta",
+						Usage: "specify graph name",
 					},
 					&cli.StringFlag{
 						Name:     "car-dir",
@@ -249,23 +253,30 @@ func main() {
 						Value: true,
 						Usage: "create a mainfest.csv in car-dir to save mapping of data-cids and slice names",
 					},
-					&cli.BoolFlag{
-						Name:  "calc-commp",
-						Value: false,
-						Usage: "create a mainfest.csv in car-dir to save mapping of data-cids, slice names, piece-cids and piece-sizes",
+				},
+				Action: CarBuild,
+			},
+			{
+				Name:  "restore",
+				Usage: "Restore files from CAR files",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "car-path",
+						Required: true,
+						Usage:    "specify source car path, directory or file",
 					},
-					&cli.BoolFlag{
-						Name:  "rename",
-						Value: false,
-						Usage: "rename carfile to piece",
+					&cli.StringFlag{
+						Name:     "output-dir",
+						Required: true,
+						Usage:    "specify output directory",
 					},
-					&cli.BoolFlag{
-						Name:  "add-padding",
-						Value: false,
-						Usage: "add padding to carfile in order to convert it to piece file",
+					&cli.IntFlag{
+						Name:  "parallel",
+						Value: 2,
+						Usage: "specify how many number of goroutines runs when generate file node",
 					},
 				},
-				Action: Chunk,
+				Action: Restore,
 			},
 		},
 	}

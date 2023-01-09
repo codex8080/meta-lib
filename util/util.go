@@ -6,8 +6,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/pborman/uuid"
 	"io"
+	"io/ioutil"
+	log "metalib/logs"
 	"os"
+	"strings"
 
 	cid "github.com/ipfs/go-cid"
 	mh "github.com/multiformats/go-multihash"
@@ -142,4 +146,92 @@ func ExistDir(path string) bool {
 		return false
 	}
 	return s.IsDir()
+}
+
+type Finfo struct {
+	Path      string
+	Name      string
+	Uuid      string
+	Info      os.FileInfo
+	SeekStart int64
+	SeekEnd   int64
+}
+
+func GetFileListAsync(args []string) chan Finfo {
+	fichan := make(chan Finfo, 0)
+	go func() {
+		defer close(fichan)
+		for _, path := range args {
+			finfo, err := os.Stat(path)
+			if err != nil {
+				log.GetLog().Warn(err)
+				return
+			}
+			//Ignore hidden directories
+			if strings.HasPrefix(finfo.Name(), ".") {
+				continue
+			}
+			if finfo.IsDir() {
+				files, err := ioutil.ReadDir(path)
+				if err != nil {
+					log.GetLog().Warn(err)
+					return
+				}
+				templist := make([]string, 0)
+				for _, n := range files {
+					templist = append(templist, fmt.Sprintf("%s/%s", path, n.Name()))
+				}
+				embededChan := GetFileListAsync(templist)
+				if err != nil {
+					log.GetLog().Warn(err)
+					return
+				}
+
+				for item := range embededChan {
+					fichan <- item
+				}
+			} else {
+				fichan <- Finfo{
+					Path: path,
+					Name: finfo.Name(),
+					Uuid: uuid.New(),
+					Info: finfo,
+				}
+			}
+		}
+	}()
+
+	return fichan
+}
+
+func GetFileList(args []string) (fileList []string, err error) {
+	fileList = make([]string, 0)
+	for _, path := range args {
+		finfo, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
+		if strings.HasPrefix(finfo.Name(), ".") {
+			continue
+		}
+		if finfo.IsDir() {
+			files, err := ioutil.ReadDir(path)
+			if err != nil {
+				return nil, err
+			}
+			templist := make([]string, 0)
+			for _, n := range files {
+				templist = append(templist, fmt.Sprintf("%s/%s", path, n.Name()))
+			}
+			list, err := GetFileList(templist)
+			if err != nil {
+				return nil, err
+			}
+			fileList = append(fileList, list...)
+		} else {
+			fileList = append(fileList, path)
+		}
+	}
+
+	return
 }
