@@ -617,6 +617,22 @@ func getFileInfoWithUuidAsync(srcFiles []string, uuidStr []string) chan util.Fin
 	return fichan
 }
 
+func doGenerateCarFrom(outputPath string, srcFiles []string) (string, string, error) {
+
+	graphFiles := make([]util.Finfo, 0)
+	files := util.GetFileListAsync(srcFiles, false)
+	for item := range files {
+		graphFiles = append(graphFiles, item)
+	}
+
+	carName, detail, err := buildGraph(graphFiles, outputPath)
+	if err != nil {
+		return "", "", err
+	}
+
+	return carName, detail, nil
+}
+
 func doGenerateCarWithUuid(outputPath string, srcFiles []string, uuidStr []string) (string, string, error) {
 	graphFiles := make([]util.Finfo, 0)
 	files := getFileInfoWithUuidAsync(srcFiles, uuidStr)

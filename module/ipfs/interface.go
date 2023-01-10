@@ -13,7 +13,6 @@ import (
 	log "metalib/logs"
 	"metalib/util"
 	"os"
-	"runtime"
 )
 
 func ListCarFile(destCar string) ([]string, error) {
@@ -70,27 +69,53 @@ func GetCarRoot(destCar string) (string, error) {
 	return root, nil
 }
 
-func GenerateCarFile(destCar string, srcFiles []string) error {
-	parallel := runtime.NumCPU()
-	sliceSize := (1 << 30) * 16 // 16G
-	parentPath := ""
-	outputDir := ""
-	isUuid := false
+func GenerateCarFromFiles(outputDir string, srcFiles []string, sliceSize int64) (string, error) {
+
 	if !util.ExistDir(outputDir) {
-		return xerrors.Errorf("Unexpected! The path of output dir does not exist")
+		return "", xerrors.Errorf("Unexpected! The path of output dir does not exist")
 	}
-	graphName := "graph-name"
-	if sliceSize == 0 {
-		return xerrors.Errorf("Unexpected! Slice size has been set as 0")
+
+	var totalSize int64 = 0
+	files := util.GetFileListAsync(srcFiles, false)
+	for item := range files {
+		totalSize += item.Info.Size()
 	}
-	inputPath := ""
+	if totalSize > sliceSize {
+		return "", xerrors.Errorf("Total files size has been bigger than sliceSize(%u)", sliceSize)
+	}
 
-	doGenerateCar(int64(sliceSize), parentPath, inputPath, outputDir, graphName, int(parallel), isUuid)
+	carFileName, _, err := doGenerateCarFrom(outputDir, srcFiles)
+	if err != nil {
+		return "", err
+	}
 
-	return nil
+	return carFileName, nil
 }
 
-func GenerateCarFileWithUuid(outputDir string, srcFiles []string, uuid []string, sliceSize int64) (string, error) {
+func GenerateCarFromDir(outputDir string, srcDir string, sliceSize int64) (string, error) {
+
+	if !util.ExistDir(outputDir) {
+		return "", xerrors.Errorf("Unexpected! The path of output dir does not exist")
+	}
+
+	var totalSize int64 = 0
+	files := util.GetFileListAsync([]string{srcDir}, false)
+	for item := range files {
+		totalSize += item.Info.Size()
+	}
+	if totalSize > sliceSize {
+		return "", xerrors.Errorf("Total files size has been bigger than sliceSize(%u)", sliceSize)
+	}
+
+	carFileName, _, err := doGenerateCarFrom(outputDir, []string{srcDir})
+	if err != nil {
+		return "", err
+	}
+
+	return carFileName, nil
+}
+
+func GenerateCarFromFilesWithUuid(outputDir string, srcFiles []string, uuid []string, sliceSize int64) (string, error) {
 
 	if len(srcFiles) != len(uuid) {
 		return "", xerrors.Errorf("The len of source files and uuids do not match.")
