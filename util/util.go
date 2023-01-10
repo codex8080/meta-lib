@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	log "github.com/codex8080/metalib/logs"
+	log "github.com/codex8080/meta-lib/logs"
 	"github.com/pborman/uuid"
 	"io"
 	"io/ioutil"
