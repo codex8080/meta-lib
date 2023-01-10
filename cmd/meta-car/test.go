@@ -103,7 +103,17 @@ func genCarFromFilesDemo() {
 
 	/*
 		OUTPUT:
+		2023-01-10T07:21:31.024Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input/dir1/test1    CID:QmQNfY7hpkBxbTy9uB6yRgTbpGo9CJvtEsbQBy5jHtsPxm    UUID:      SIZE:262159510
 
+		2023-01-10T07:21:31.035Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input/dir1/dir2/test3    CID:QmfP18UDFNe32NQTghymmeTwxAWMcUPy95AAQ4Q31unvbQ    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:31.039Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input/dir1/dir2/test2    CID:QmYP8bP6njMw9rzkASJpwvpUsAT9APHZSDZ5StRgDytRap    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:31.042Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input/test4    CID:QmfP18UDFNe32NQTghymmeTwxAWMcUPy95AAQ4Q31unvbQ    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:31.046Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input/test0    CID:QmZ6RNrAPwL6bjRiZzv9EFJ9wj8pVuJCCSZAkHpLEoagLN    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:33.361Z        INFO    meta    meta-car/test.go:102    Create car file is:/test/output/QmNw41HifRG5vXNJFJhgTJzeRpmFXtfp8Mit4ancXZtADQ.car
 	*/
 
 }
@@ -123,7 +133,17 @@ func genCarFromDirDemo() {
 
 	/*
 		OUTPUT:
+		2023-01-10T07:21:33.763Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input//test0    CID:QmZ6RNrAPwL6bjRiZzv9EFJ9wj8pVuJCCSZAkHpLEoagLN    UUID:      SIZE:262159510
 
+		2023-01-10T07:21:33.773Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input//test4    CID:QmfP18UDFNe32NQTghymmeTwxAWMcUPy95AAQ4Q31unvbQ    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:33.776Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input//dir1/test1    CID:QmQNfY7hpkBxbTy9uB6yRgTbpGo9CJvtEsbQBy5jHtsPxm    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:33.797Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input//dir1/dir2/test3    CID:QmfP18UDFNe32NQTghymmeTwxAWMcUPy95AAQ4Q31unvbQ    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:33.807Z        INFO    meta    ipfs/gencar.go:694      FILE:/test/input//dir1/dir2/test2    CID:QmYP8bP6njMw9rzkASJpwvpUsAT9APHZSDZ5StRgDytRap    UUID:      SIZE:262159510
+
+		2023-01-10T07:21:38.145Z        INFO    meta    meta-car/test.go:122    Create car file is:/test/output/QmNw41HifRG5vXNJFJhgTJzeRpmFXtfp8Mit4ancXZtADQ.car
 	*/
 
 }
