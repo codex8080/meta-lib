@@ -723,7 +723,7 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 			panic("unexpected, missing file node")
 		}
 		if len(dirList) == 0 {
-			dirNodeMap[rootKey].AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
+			dirNodeMap[rootKey].AddNodeLink(item.Name+item.Uuid, fileNode)
 			continue
 		}
 		//log.Info(item.Path)
@@ -747,7 +747,7 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 			}
 			// add file node to its nearest parent node
 			if i == len(dirList)-1 {
-				dirNode.AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
+				dirNode.AddNodeLink(item.Name+item.Uuid, fileNode)
 			}
 			if i == 0 {
 				parentKey = rootKey
