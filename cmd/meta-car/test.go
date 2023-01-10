@@ -22,11 +22,11 @@ func CreateCarFileTest(c *cli.Context) error {
 }
 
 func carFileTest() {
-	destFile := "/test/output/test.car"
+	destFile := "./test/output/test.car"
 	srcFiles := []string{
-		"/test/input/test0",
-		"/test/input/dir1/test1",
-		"/test/input/dir1/dir2/test2",
+		"./test/input/test0",
+		"./test/input/dir1/test1",
+		"./test/input/dir1/dir2/test2",
 	}
 
 	if err := meta_car.CreateCarFile(destFile, srcFiles); err != nil {
@@ -37,13 +37,13 @@ func carFileTest() {
 }
 
 func genCarWithUuidDemo() {
-	outputDir := "/test/output"
+	outputDir := "./test/output"
 	srcFiles := []string{
-		"/test/input/test0",
-		"/test/input/test4",
-		"/test/input/dir1/test1",
-		"/test/input/dir1/dir2/test2",
-		"/test/input/dir1/dir2/test3",
+		"./test/input/test0",
+		"./test/input/test4",
+		"./test/input/dir1/test1",
+		"./test/input/dir1/dir2/test2",
+		"./test/input/dir1/dir2/test3",
 	}
 	uuid := []string{
 		"94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
@@ -83,13 +83,13 @@ func genCarWithUuidDemo() {
 }
 
 func genCarFromFilesDemo() {
-	outputDir := "/test/output"
+	outputDir := "./test/output"
 	srcFiles := []string{
-		"/test/input/test0",
-		"/test/input/test4",
-		"/test/input/dir1/test1",
-		"/test/input/dir1/dir2/test2",
-		"/test/input/dir1/dir2/test3",
+		"./test/input/test0",
+		"./test/input/test4",
+		"./test/input/dir1/test1",
+		"./test/input/dir1/dir2/test2",
+		"./test/input/dir1/dir2/test3",
 	}
 	sliceSize := 17179869184
 
@@ -119,8 +119,8 @@ func genCarFromFilesDemo() {
 }
 
 func genCarFromDirDemo() {
-	outputDir := "/test/output"
-	srcDir := "/test/input/"
+	outputDir := "./test/output"
+	srcDir := "./test/input/"
 	sliceSize := 17179869184
 
 	carFileName, err := meta_car.GenerateCarFromDir(outputDir, srcDir, int64(sliceSize))
@@ -149,7 +149,7 @@ func genCarFromDirDemo() {
 }
 
 func listCarDemo() {
-	destCar := "/test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
+	destCar := "./test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
 	infoList, err := meta_car.ListCarFile(destCar)
 	if err != nil {
 		log.GetLog().Error("List car file info error:", err)
@@ -175,7 +175,7 @@ func listCarDemo() {
 }
 
 func GetCarRootDemo() {
-	destCar := "/test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
+	destCar := "./test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
 	rootCid, err := meta_car.GetCarRoot(destCar)
 	if err != nil {
 		log.GetLog().Error("List car file info error:", err)
