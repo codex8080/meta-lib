@@ -43,11 +43,11 @@ func genCarWithUuidDemo() {
 		"/test/input/dir1/dir2/test3",
 	}
 	uuid := []string{
-		"uuid-94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
-		"uuid-571e4e2b-d50b-4ac2-a89f-07795b684148",
-		"uuid-36f4da38-a028-493a-a855-51b07269e709",
-		"uuid-e99d2819-09a8-4e53-8158-a48d8154e057",
-		"uuid-6631aa2a-5e89-4f98-b114-86bf4403f1c2",
+		"94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
+		"571e4e2b-d50b-4ac2-a89f-07795b684148",
+		"36f4da38-a028-493a-a855-51b07269e709",
+		"e99d2819-09a8-4e53-8158-a48d8154e057",
+		"6631aa2a-5e89-4f98-b114-86bf4403f1c2",
 	}
 	sliceSize := 17179869184
 
@@ -126,7 +126,7 @@ func genCarFromDirDemo() {
 }
 
 func listCarDemo() {
-	destCar := "/test/output/test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
+	destCar := "/test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
 	infoList, err := meta_car.ListCarFile(destCar)
 	if err != nil {
 		log.GetLog().Error("List car file info error:", err)
@@ -142,7 +142,7 @@ func listCarDemo() {
 }
 
 func GetCarRootDemo() {
-	destCar := "/test/output/test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
+	destCar := "/test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
 	rootCid, err := meta_car.GetCarRoot(destCar)
 	if err != nil {
 		log.GetLog().Error("List car file info error:", err)
@@ -152,7 +152,7 @@ func GetCarRootDemo() {
 
 	/*
 		OUTPUT:
-
+		2023-01-10T05:52:29.546Z        INFO    meta    meta-car/test.go:155    Root CID is:QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7
 	*/
 
 }

@@ -128,7 +128,7 @@ func ExtractCarFile(destDir string, srcCar string) error {
 	return nil
 }
 
-func printLinksNode(prefix string, node cid.Cid, ls *ipld.LinkSystem, infoList []string) error {
+func printLinksNode(prefix string, node cid.Cid, ls *ipld.LinkSystem, infoList *[]string) error {
 	// it might be a raw file (bytes) node. if so, not actually an error.
 	if node.Prefix().Codec == cid.Raw {
 		return nil
@@ -153,7 +153,7 @@ func printLinksNode(prefix string, node cid.Cid, ls *ipld.LinkSystem, infoList [
 			size := l.Tsize.Must().Int()
 			nameLen := len(name)
 			uuid := ""
-			uuidLen := len("-uuid-ce547c40-acf9-11e6-80f5-76304dec7eb7")
+			uuidLen := len("ce547c40-acf9-11e6-80f5-76304dec7eb7")
 			// TODO: split uuid string and check it
 			if nameLen > uuidLen {
 				uuid = name[nameLen-uuidLen+1:]
@@ -168,7 +168,7 @@ func printLinksNode(prefix string, node cid.Cid, ls *ipld.LinkSystem, infoList [
 			if cidl, ok := cl.(cidlink.Link); ok {
 				info := ""
 				fmt.Printf(info, "FILE:%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
-				infoList = append(infoList, info)
+				*infoList = append(*infoList, info)
 				if err := printLinksNode(name, cidl.Cid, ls, infoList); err != nil {
 					return err
 				}

@@ -43,7 +43,7 @@ func ListCarFile(destCar string) ([]string, error) {
 	}
 
 	for _, r := range roots {
-		if err := printLinksNode("", r, &ls, infoList); err != nil {
+		if err := printLinksNode("", r, &ls, &infoList); err != nil {
 			return infoList, err
 		}
 	}
