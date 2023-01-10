@@ -1,6 +1,6 @@
 module github.com/testDemo
 
-require github.com/FogMeta/meta-lib v0.0.2
+require github.com/FogMeta/meta-lib v0.0.3
 
 require (
 	github.com/gogo/protobuf v1.3.2 // indirect
