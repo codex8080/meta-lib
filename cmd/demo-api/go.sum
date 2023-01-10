@@ -73,8 +73,8 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
-github.com/codex8080/meta-lib v0.0.1 h1:Y5Zpd6YA5euy1DgBGafn2IEEryqkMKdHvqt8XPma1wU=
-github.com/codex8080/meta-lib v0.0.1/go.mod h1:U4QZNWR+I1RnWM1HEkTpEFcJ0mqGounHDEs1SoAQCEk=
+github.com/codex8080/meta-lib v0.0.2 h1:+gSFiWbKbWS3vtohlFBiLh97r/KhVEM9HRUiexb43CA=
+github.com/codex8080/meta-lib v0.0.2/go.mod h1:/q2hYjimqrtahsHFl/EL744AucyKQLv6C5jUQ5q9qYI=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8NzMklzPG4d5KIOhIy30Tk=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
