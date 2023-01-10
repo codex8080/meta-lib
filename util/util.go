@@ -6,10 +6,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	log "github.com/codex8080/metalib/logs"
 	"github.com/pborman/uuid"
 	"io"
 	"io/ioutil"
-	log "metalib/logs"
 	"os"
 	"strings"
 

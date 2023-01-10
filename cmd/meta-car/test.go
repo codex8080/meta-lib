@@ -1,9 +1,9 @@
 package main
 
 import (
+	log "github.com/codex8080/metalib/logs"
+	meta_car "github.com/codex8080/metalib/module/ipfs"
 	"github.com/urfave/cli/v2"
-	log "metalib/logs"
-	meta_car "metalib/module/ipfs"
 )
 
 func CreateCarFileTest(c *cli.Context) error {

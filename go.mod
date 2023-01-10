@@ -1,4 +1,4 @@
-module metalib
+module github.com/codex8080/metalib
 
 require (
 	github.com/dustin/go-humanize v1.0.0
