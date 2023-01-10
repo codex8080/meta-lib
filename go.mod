@@ -1,4 +1,4 @@
-module github.com/codex8080/meta-lib
+module github.com/FogMeta/meta-lib
 
 require (
 	github.com/dustin/go-humanize v1.0.0

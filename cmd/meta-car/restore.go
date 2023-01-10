@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/codex8080/meta-lib/util"
+	"github.com/FogMeta/meta-lib/util"
 	"io"
 	"os"
 	pa "path"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/codex8080/meta-lib/logs"
+	log "github.com/FogMeta/meta-lib/logs"
 	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"

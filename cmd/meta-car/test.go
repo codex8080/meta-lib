@@ -1,8 +1,8 @@
 package main
 
 import (
-	log "github.com/codex8080/meta-lib/logs"
-	meta_car "github.com/codex8080/meta-lib/module/ipfs"
+	log "github.com/FogMeta/meta-lib/logs"
+	meta_car "github.com/FogMeta/meta-lib/module/ipfs"
 	"github.com/urfave/cli/v2"
 )
 
