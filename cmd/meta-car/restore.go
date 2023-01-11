@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/FogMeta/meta-lib/util"
 	"io"
-	"metalib/util"
 	"os"
 	pa "path"
 	"path/filepath"
 	"strings"
 	"sync"
 
+	log "github.com/FogMeta/meta-lib/logs"
 	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
@@ -23,7 +24,6 @@ import (
 	"github.com/ipld/go-car"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/xerrors"
-	log "metalib/logs"
 )
 
 func Restore(c *cli.Context) error {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-unixfsnode/data"
 	"github.com/ipfs/go-unixfsnode/data/builder"
 	"github.com/ipld/go-car/v2"
 	"github.com/ipld/go-car/v2/blockstore"
@@ -124,5 +125,59 @@ func writeFiles(bs *blockstore.ReadWrite, srcFiles []string) (cid.Cid, error) {
 }
 
 func ExtractCarFile(destDir string, srcCar string) error {
+	return nil
+}
+
+func printLinksNode(prefix string, node cid.Cid, ls *ipld.LinkSystem, infoList *[]string) error {
+	// it might be a raw file (bytes) node. if so, not actually an error.
+	if node.Prefix().Codec == cid.Raw {
+		return nil
+	}
+
+	pbn, err := ls.Load(ipld.LinkContext{}, cidlink.Link{Cid: node}, dagpb.Type.PBNode)
+	if err != nil {
+		return err
+	}
+
+	pbnode := pbn.(dagpb.PBNode)
+
+	ufd, err := data.DecodeUnixFSData(pbnode.Data.Must().Bytes())
+	if err != nil {
+		return err
+	}
+	if ufd.FieldDataType().Int() == data.Data_Directory {
+		i := pbnode.Links.Iterator()
+		for !i.Done() {
+			_, l := i.Next()
+			name := path.Join(prefix, l.Name.Must().String())
+			size := l.Tsize.Must().Int()
+			nameLen := len(name)
+			uuid := ""
+			uuidLen := len("ce547c40-acf9-11e6-80f5-76304dec7eb7")
+			// TODO: split uuid string and check it
+			if nameLen > uuidLen {
+				uuid = name[nameLen-uuidLen+1:]
+				name = name[:nameLen-uuidLen]
+			}
+
+			// recurse into the file/directory
+			cl, err := l.Hash.AsLink()
+			if err != nil {
+				return err
+			}
+			if cidl, ok := cl.(cidlink.Link); ok {
+				info := fmt.Sprintf("FILE:%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
+				*infoList = append(*infoList, info)
+				if err := printLinksNode(name, cidl.Cid, ls, infoList); err != nil {
+					return err
+				}
+			}
+
+		}
+	} else {
+		// file, file chunk, symlink, other un-named entities.
+		return nil
+	}
+
 	return nil
 }

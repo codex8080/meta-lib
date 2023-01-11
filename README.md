@@ -33,25 +33,88 @@ go get github.com/FogMeta/meta-lib/
 See docs on [pkg.go.dev](https://pkg.go.dev/github.com/ipld/go-car).
 
 ## Examples
-Here is a example for use CreateCarFile of meta-lib.
+Here is a example for using meta-lib.
 ```go
 package main
 
 import (
-    meta_car "github.com/FogMeta/meta-lib"
+  log "github.com/FogMeta/meta-lib/logs"
+  meta_car "github.com/FogMeta/meta-lib/module/ipfs"
 )
 
-func main () {
-    destFile := "./dest.car"
-    srcFiles := []string{"./src0.txt", "./src1.txt", "./src2.txt"}
-	
-    if err := meta_car.CreateCarFile(destFile, srcFiles); err != nil {
-        log.GetLog().Error("Test create car file error:", err)
-    }
+func main() {
+    genCarWithUuidDemo()
+
+    genCarFromFilesDemo()
+
+    genCarFromDirDemo()
 
     return
 }
 
+func genCarWithUuidDemo() {
+    outputDir := "./test/output"
+    srcFiles := []string{
+      "./test/input/test0",
+      "./test/input/test4",
+      "./test/input/dir1/test1",
+      "./test/input/dir1/dir2/test2",
+      "./test/input/dir1/dir2/test3",
+    }
+    uuid := []string{
+      "94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
+      "571e4e2b-d50b-4ac2-a89f-07795b684148",
+      "36f4da38-a028-493a-a855-51b07269e709",
+      "e99d2819-09a8-4e53-8158-a48d8154e057",
+      "6631aa2a-5e89-4f98-b114-86bf4403f1c2",
+    }
+    sliceSize := 17179869184
+  
+    carFileName, err := meta_car.GenerateCarFromFilesWithUuid(outputDir, srcFiles, uuid, int64(sliceSize))
+    if err != nil {
+      log.GetLog().Error("Test create CAR file error:", err)
+      return
+    }
+  
+    log.GetLog().Info("create CAR file is:", carFileName)
+
+}
+
+func genCarFromFilesDemo() {
+    outputDir := "./test/output"
+    srcFiles := []string{
+      "./test/input/test0",
+      "./test/input/test4",
+      "./test/input/dir1/test1",
+      "./test/input/dir1/dir2/test2",
+      "./test/input/dir1/dir2/test3",
+    }
+    sliceSize := 17179869184
+  
+    carFileName, err := meta_car.GenerateCarFromFiles(outputDir, srcFiles, int64(sliceSize))
+    if err != nil {
+      log.GetLog().Error("Create CAR file error:", err)
+      return
+    }
+  
+    log.GetLog().Info("Create CAR file is:", carFileName)
+
+}
+
+func genCarFromDirDemo() {
+    outputDir := "./test/output"
+    srcDir := "./test/input/"
+    sliceSize := 17179869184
+  
+    carFileName, err := meta_car.GenerateCarFromDir(outputDir, srcDir, int64(sliceSize))
+    if err != nil {
+      log.GetLog().Error("Create CAR file error:", err)
+      return
+    }
+  
+    log.GetLog().Info("Create CAR file is:", carFileName)
+
+}
 ```
 ## Maintainers
 

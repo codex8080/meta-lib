@@ -244,6 +244,11 @@ func main() {
 						Usage:    "specify output CAR directory",
 					},
 					&cli.StringFlag{
+						Name:     "uuid",
+						Required: true,
+						Usage:    "Add uuid to filename suffix",
+					},
+					&cli.StringFlag{
 						Name:  "parent-path",
 						Value: "",
 						Usage: "specify graph parent path",

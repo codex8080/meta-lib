@@ -8,8 +8,6 @@ import (
 	"github.com/multiformats/go-multihash"
 	"github.com/urfave/cli/v2"
 	"io"
-	log "metalib/logs"
-	meta_car "metalib/module/ipfs"
 	"os"
 )
 
@@ -109,18 +107,6 @@ func VerifyCar(c *cli.Context) error {
 				return fmt.Errorf("could not look up known cid %s in index: %w", c, err)
 			}
 		}
-	}
-
-	return nil
-}
-
-func CreateCarFileTest(c *cli.Context) error {
-	destFile := "./test.car"
-	srcFiles := []string{"./dir0/test0.txt", "./dir1/test1.txt", "./dir2/test2.txt"}
-	
-	if err := meta_car.CreateCarFile(destFile, srcFiles); err != nil {
-		log.GetLog().Error("Test create car file error:", err)
-		return err
 	}
 
 	return nil

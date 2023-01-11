@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	log "github.com/FogMeta/meta-lib/logs"
+	"github.com/FogMeta/meta-lib/util"
 	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
@@ -26,8 +28,6 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/xerrors"
 	"io"
-	log "metalib/logs"
-	"metalib/util"
 	"os"
 	"path"
 	"runtime"
@@ -40,6 +40,7 @@ func CarBuild(c *cli.Context) error {
 	sliceSize := c.Uint64("slice-size")
 	parentPath := c.String("parent-path")
 	carDir := c.String("car-dir")
+	isUuid := c.Bool("uuid")
 	if !util.ExistDir(carDir) {
 		return xerrors.Errorf("Unexpected! The path of car-dir does not exist")
 	}
@@ -49,12 +50,12 @@ func CarBuild(c *cli.Context) error {
 	}
 	targetPath := c.Args().First()
 
-	doChunk(int64(sliceSize), parentPath, targetPath, carDir, graphName, int(parallel))
+	doChunk(int64(sliceSize), parentPath, targetPath, carDir, graphName, int(parallel), isUuid)
 
 	return nil
 }
 
-func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, parallel int) error {
+func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, parallel int, isUuid bool) error {
 	var cumuSize int64 = 0
 	graphSliceCount := 0
 	graphFiles := make([]util.Finfo, 0)
@@ -74,7 +75,7 @@ func doChunk(sliceSize int64, parentPath, targetPath, carDir, graphName string, 
 		log.GetLog().Warn("Empty folder or file!")
 		return nil
 	}
-	files := util.GetFileListAsync(args)
+	files := util.GetFileListAsync(args, isUuid)
 	for item := range files {
 		fileSize := item.Info.Size()
 		switch {
@@ -367,7 +368,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			panic("unexpected, missing file node")
 		}
 		if len(dirList) == 0 {
-			dirNodeMap[rootKey].AddNodeLink(item.Name+"-uuid-"+item.Uuid, fileNode)
+			dirNodeMap[rootKey].AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
 			continue
 		}
 		//log.Info(item.Path)
@@ -391,7 +392,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			}
 			// add file node to its nearest parent node
 			if i == len(dirList)-1 {
-				dirNode.AddNodeLink(item.Name+"-uuid-"+item.Uuid, fileNode)
+				dirNode.AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
 			}
 			if i == 0 {
 				parentKey = rootKey
