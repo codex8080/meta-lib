@@ -3,6 +3,9 @@ package main
 import (
 	log "github.com/FogMeta/meta-lib/logs"
 	meta_car "github.com/FogMeta/meta-lib/module/ipfs"
+	"github.com/FogMeta/meta-lib/util"
+	"golang.org/x/xerrors"
+	"os"
 )
 
 func main() {
@@ -15,7 +18,7 @@ func main() {
 
 	listCarDemo()
 
-	GetCarRootDemo()
+	getCarRootDemo()
 
 	return
 }
@@ -95,7 +98,7 @@ func listCarDemo() {
 
 }
 
-func GetCarRootDemo() {
+func getCarRootDemo() {
 	destCar := "../../test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
 	rootCid, err := meta_car.GetCarRoot(destCar)
 	if err != nil {
@@ -104,4 +107,97 @@ func GetCarRootDemo() {
 
 	log.GetLog().Info("Root CID is:", rootCid)
 
+}
+
+func genCarFromDirsDemo() {
+	outputDir := "../../test/output"
+	srcDir := []string{
+		"../../test/input1/",
+		"../../test/input2/",
+		"../../test/input3/",
+	}
+	sliceSize := 17179869184
+
+	carInfos, err := GenCarFromDirs(outputDir, srcDir, int64(sliceSize))
+	if err != nil {
+		log.GetLog().Error("Create car file error:", err)
+		return
+	}
+
+	log.GetLog().Infof("%+v", carInfos)
+
+}
+
+type CarInfo struct {
+	CarFile     string
+	TotalSize   int64
+	ContainDirs []string
+}
+
+func GetFilesSize(args []string) (int64, error) {
+	totalSize := int64(0)
+	fileList, err := util.GetFileList(args)
+	if err != nil {
+		return int64(0), err
+	}
+
+	for _, path := range fileList {
+		finfo, err := os.Stat(path)
+		if err != nil {
+			return int64(0), err
+		}
+		totalSize += finfo.Size()
+	}
+
+	return totalSize, nil
+}
+
+func GenCarFromDirs(outputDir string, srcDir []string, sliceSize int64) ([]CarInfo, error) {
+
+	if !util.ExistDir(outputDir) {
+		return nil, xerrors.Errorf("Unexpected! The path of output dir does not exist")
+	}
+
+	carInfos := make([]CarInfo, 0)
+
+	accSize := int64(0)
+	accDirs := make([]string, 0)
+	for _, dir := range srcDir {
+
+		dirSize, err := GetFilesSize([]string{dir})
+		if err != nil {
+			log.GetLog().Errorf("Get %s size error:%s", dir, err)
+			continue
+		}
+
+		if dirSize > sliceSize {
+			log.GetLog().Errorf("%s size is %d and bigger than :%d", dir, dirSize, sliceSize)
+			continue
+		}
+
+		if (accSize + dirSize) > sliceSize {
+			//to build car
+			carFileName, err := meta_car.GenerateCarFromFiles(outputDir, accDirs, sliceSize)
+			if err != nil {
+				log.GetLog().Errorf("%s size is %d and bigger than :%d", dir, dirSize, sliceSize)
+				continue
+			}
+
+			carInfos = append(carInfos, CarInfo{
+				CarFile:     carFileName,
+				TotalSize:   accSize,
+				ContainDirs: accDirs,
+			})
+			log.GetLog().Info("Create CAR:", carFileName)
+
+			accSize = int64(0)
+			accDirs = make([]string, 0)
+			continue
+		}
+
+		accSize += dirSize
+		accDirs = append(accDirs, dir)
+	}
+
+	return carInfos, nil
 }
