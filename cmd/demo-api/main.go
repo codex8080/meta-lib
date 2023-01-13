@@ -20,6 +20,8 @@ func main() {
 
 	getCarRootDemo()
 
+	genCarFromDirsDemo()
+
 	return
 }
 
