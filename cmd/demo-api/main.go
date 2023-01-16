@@ -90,7 +90,7 @@ func genCarFromDirDemo() {
 }
 
 func listCarDemo() {
-	destCar := "../../test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
+	destCar := "../../test/output/QmU82brV3nWi832MELRprd5KfSfjeNoir424EfzyA3pid1.car"
 	infoList, err := meta_car.ListCarFile(destCar)
 	if err != nil {
 		log.GetLog().Error("List car file info error:", err)
@@ -101,7 +101,7 @@ func listCarDemo() {
 }
 
 func getCarRootDemo() {
-	destCar := "../../test/output/QmUabWJFQGr1hWxhLikB9eLjfRZcaoTrQZJYTMP6AnozN7.car"
+	destCar := "../../test/output/QmU82brV3nWi832MELRprd5KfSfjeNoir424EfzyA3pid1.car"
 	rootCid, err := meta_car.GetCarRoot(destCar)
 	if err != nil {
 		log.GetLog().Error("List car file info error:", err)
