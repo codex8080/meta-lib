@@ -13,6 +13,7 @@ import (
 	"golang.org/x/xerrors"
 	"io"
 	"os"
+	"runtime"
 )
 
 func ListCarFile(destCar string) ([]string, error) {
@@ -132,4 +133,14 @@ func GenerateCarFromFilesWithUuid(outputDir string, srcFiles []string, uuid []st
 
 	log.GetLog().Info(detailJson)
 	return carFileName, nil
+}
+
+func RestoreCar(outputDir string, srcCar string) error {
+
+	parallel := runtime.NumCPU()
+	CarTo(srcCar, outputDir, parallel)
+	Merge(outputDir, parallel)
+	fmt.Println("completed!")
+
+	return nil
 }
