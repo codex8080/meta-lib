@@ -299,7 +299,7 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 				return err
 			}
 			if cidl, ok := cl.(cidlink.Link); ok {
-				fmt.Fprintf(outStream, "FILE:%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
+				fmt.Fprintf(outStream, "%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
 				if err := printLinksNode(c, name, cidl.Cid, ls, outStream); err != nil {
 					return err
 				}
