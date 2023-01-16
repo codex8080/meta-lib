@@ -6,9 +6,9 @@ meta-lib
 [meta-lib](v1.0.0) features:
 * A CLI tools to interact with CAR file. [Usage](https://github.com/FogMeta/meta-lib/blob/main/cmd/meta-car/README.md#usage)
 * [Generate CAR](https://github.com/FogMeta/meta-lib#api-documentation) from files or folders. 
-* [Get root CID](https://github.com/FogMeta/meta-lib#L71) of a CAR file.
-* [List](https://github.com/FogMeta/meta-lib#L85) original file(s) information in the CAR.
-* [Restore](https://github.com/FogMeta/meta-lib#L99) the original file(s) in the CAR.
+* [Get root CID](https://github.com/FogMeta/meta-lib/blob/main/README.md#L71) of a CAR file.
+* [List](https://github.com/FogMeta/meta-lib/blob/main/README.md#L85) original file(s) information in the CAR.
+* [Restore](https://github.com/FogMeta/meta-lib/blob/main/README.md#L99) the original file(s) in the CAR.
 
 ## Install
 
