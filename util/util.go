@@ -194,7 +194,7 @@ func GetFileListAsync(args []string, isUuid bool) chan Finfo {
 
 				uuidStr := ""
 				if isUuid {
-					uuidStr = "uuid-" + uuid.New()
+					uuidStr = uuid.New()
 				}
 
 				fichan <- Finfo{

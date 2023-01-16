@@ -336,7 +336,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			lock.Unlock()
 			// fmt.Println(item.Path)
 			stat, _ := fileNode.Stat()
-			log.GetLog().Infof("FILE:%s    CID:%s    UUID:uuid-%s      SIZE:%d\n", item.Path, fileNode, item.Uuid, stat.CumulativeSize)
+			log.GetLog().Infof("FILE:%s    CID:%s    UUID:%s      SIZE:%d\n", item.Path, fileNode, item.Uuid, stat.CumulativeSize)
 		}(i, item)
 	}
 	wg.Wait()
