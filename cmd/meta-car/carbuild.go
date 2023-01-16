@@ -336,7 +336,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			lock.Unlock()
 			// fmt.Println(item.Path)
 			stat, _ := fileNode.Stat()
-			log.GetLog().Infof("FILE:%s    CID:%s    UUID:uuid-%s      SIZE:%d\n", item.Path, fileNode, item.Uuid, stat.CumulativeSize)
+			log.GetLog().Infof("FILE:%s    CID:%s    UUID:%s      SIZE:%d\n", item.Path, fileNode, item.Uuid, stat.CumulativeSize)
 		}(i, item)
 	}
 	wg.Wait()
@@ -368,11 +368,11 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			panic("unexpected, missing file node")
 		}
 		if len(dirList) == 0 {
-			dirNodeMap[rootKey].AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
+			dirNodeMap[rootKey].AddNodeLink(item.Name+item.Uuid, fileNode)
 			continue
 		}
 		//log.Info(item.Path)
-		log.GetLog().Info(dirList)
+		//log.GetLog().Info(dirList)
 		i := len(dirList) - 1
 		for ; i >= 0; i-- {
 			// get dirNodeMap by index
@@ -382,8 +382,8 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			var parentKey string
 			dir := dirList[i]
 			dirKey := getDirKey(dirList, i)
-			log.GetLog().Info(dirList)
-			log.GetLog().Infof("dirKey: %s", dirKey)
+			//log.GetLog().Info(dirList)
+			//log.GetLog().Infof("dirKey: %s", dirKey)
 			dirNode, ok = dirNodeMap[dirKey]
 			if !ok {
 				dirNode = unixfs.EmptyDirNode()
@@ -392,14 +392,14 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			}
 			// add file node to its nearest parent node
 			if i == len(dirList)-1 {
-				dirNode.AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
+				dirNode.AddNodeLink(item.Name+item.Uuid, fileNode)
 			}
 			if i == 0 {
 				parentKey = rootKey
 			} else {
 				parentKey = getDirKey(dirList, i-1)
 			}
-			log.GetLog().Infof("parentKey: %s", parentKey)
+			//log.GetLog().Infof("parentKey: %s", parentKey)
 			parentNode, ok = dirNodeMap[parentKey]
 			if !ok {
 				parentNode = unixfs.EmptyDirNode()

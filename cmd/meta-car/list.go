@@ -286,10 +286,10 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 			size := l.Tsize.Must().Int()
 			nameLen := len(name)
 			uuid := ""
-			uuidLen := len("-uuid-ce547c40-acf9-11e6-80f5-76304dec7eb7")
+			uuidLen := len("ce547c40-acf9-11e6-80f5-76304dec7eb7")
 			// TODO: split uuid string and check it
 			if nameLen > uuidLen {
-				uuid = name[nameLen-uuidLen+1:]
+				uuid = name[nameLen-uuidLen:]
 				name = name[:nameLen-uuidLen]
 			}
 
@@ -299,7 +299,7 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 				return err
 			}
 			if cidl, ok := cl.(cidlink.Link); ok {
-				fmt.Fprintf(outStream, "FILE:%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
+				fmt.Fprintf(outStream, "%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
 				if err := printLinksNode(c, name, cidl.Cid, ls, outStream); err != nil {
 					return err
 				}

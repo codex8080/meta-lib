@@ -194,7 +194,7 @@ func GetFileListAsync(args []string, isUuid bool) chan Finfo {
 
 				uuidStr := ""
 				if isUuid {
-					uuidStr = "uuid-" + uuid.New()
+					uuidStr = uuid.New()
 				}
 
 				fichan <- Finfo{
@@ -235,6 +235,42 @@ func GetFileList(args []string) (fileList []string, err error) {
 			}
 			fileList = append(fileList, list...)
 		} else {
+			fileList = append(fileList, path)
+		}
+	}
+
+	return
+}
+
+func GetFileListEx(args []string) (fileList []string, totalSize uint64, err error) {
+	fileList = make([]string, 0)
+	totalSize = 0
+	for _, path := range args {
+		finfo, err := os.Stat(path)
+		if err != nil {
+			return nil, uint64(0), err
+		}
+		if strings.HasPrefix(finfo.Name(), ".") {
+			continue
+		}
+		if finfo.IsDir() {
+			files, err := ioutil.ReadDir(path)
+			if err != nil {
+				return nil, uint64(0), err
+			}
+			templist := make([]string, 0)
+			for _, n := range files {
+				templist = append(templist, fmt.Sprintf("%s/%s", path, n.Name()))
+			}
+			list, dirSize, err := GetFileListEx(templist)
+			if err != nil {
+				return nil, uint64(0), err
+			}
+			totalSize += dirSize
+			fileList = append(fileList, list...)
+		} else {
+
+			totalSize += uint64(finfo.Size())
 			fileList = append(fileList, path)
 		}
 	}
