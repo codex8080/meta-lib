@@ -351,7 +351,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			panic("unexpected, missing file node")
 		}
 		if len(dirList) == 0 {
-			dirNodeMap[rootKey].AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
+			dirNodeMap[rootKey].AddNodeLink(item.Name+item.Uuid, fileNode)
 			continue
 		}
 		//log.Info(item.Path)
@@ -375,7 +375,7 @@ func buildIpldGraph(fileList []util.Finfo, parentPath, carDir string, parallel i
 			}
 			// add file node to its nearest parent node
 			if i == len(dirList)-1 {
-				dirNode.AddNodeLink(item.Name+"-"+item.Uuid, fileNode)
+				dirNode.AddNodeLink(item.Name+item.Uuid, fileNode)
 			}
 			if i == 0 {
 				parentKey = rootKey
