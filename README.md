@@ -1,122 +1,122 @@
 meta-lib
 ==================
 
-> A library to interact with merkledags stored as a single file
-
-This is a Go implementation of the [CAR specifications](https://ipld.io/specs/transport/car/), both [CARv1](https://ipld.io/specs/transport/car/carv1/) and [CARv2](https://ipld.io/specs/transport/car/carv2/).
-
-Note that there are two major module versions:
-
-* [`go-car/v2`](v2/) is geared towards reading and writing CARv2 files, and also
-  supports consuming CARv1 files and using CAR files as an IPFS blockstore.
-* `go-car` v0, in the root directory, just supports reading and writing CARv1 files.
-
-Most users should use v2, especially for new software, since the v2 API transparently supports both CAR formats.
-
 ## Features
 
-[CARv2](v2) features:
-* [Generate index](https://pkg.go.dev/github.com/ipld/go-car/v2#GenerateIndex) from an existing CARv1 file
-* [Wrap](https://pkg.go.dev/github.com/ipld/go-car/v2#WrapV1) CARv1 files into a CARv2 with automatic index generation.
-* Random-access to blocks in a CAR file given their CID via [Read-Only blockstore](https://pkg.go.dev/github.com/ipld/go-car/v2/blockstore#NewReadOnly) API, with transparent support for both CARv1 and CARv2
-* Write CARv2 files via [Read-Write blockstore](https://pkg.go.dev/github.com/ipld/go-car/v2/blockstore#OpenReadWrite) API, with support for appending blocks to an existing CARv2 file, and resumption from a partially written CARv2 files.
-* Individual access to [inner CARv1 data payload]((https://pkg.go.dev/github.com/ipld/go-car/v2#Reader.DataReader)) and [index]((https://pkg.go.dev/github.com/ipld/go-car/v2#Reader.IndexReader)) of a CARv2 file via the `Reader` API.
+[meta-lib](v1.0.0) features:
+* A CLI tools to interact with CAR file. [Usage](https://github.com/FogMeta/meta-lib/blob/main/cmd/meta-car/README.md#usage)
+* [Generate CAR](https://github.com/FogMeta/meta-lib#api-documentation) from files or folders. 
+* [Get root CID](https://github.com/FogMeta/meta-lib#L71) of a CAR file.
+* [List](https://github.com/FogMeta/meta-lib#L85) original file(s) information in the CAR.
+* [Restore](https://github.com/FogMeta/meta-lib#L99) the original file(s) in the CAR.
 
 ## Install
 
-To install the latest version of `meta-lib` module, run:
+To install the latest version of `meta-lib` module:
 ```shell script
 go get github.com/FogMeta/meta-lib/
 ```
 
 ## API Documentation
-See docs on [pkg.go.dev](https://pkg.go.dev/github.com/ipld/go-car).
+
+**func [GenerateCarFromFilesWithUuid](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L119)**
+```go
+func GenerateCarFromFilesWithUuid(outputDir string, srcFiles []string, uuid []string, sliceSize int64) (carFile string, err error)
+
+PARAMETER:
+    --outputDir    directory where CAR file(s) will be generated.
+    --srcFiles     file(s) where source file(s) is(are).
+    --uuid         uuid(s) that corresponds to srcFiles
+    --sliceSize    bytes of each piece (default: 17179869184)
+
+RETURN:
+    --carFile      the CAR which generated.
+    --err          error information returned.
+```
+`GenerateCarFromFilesWithUuid` returns the CAR which generated from file(s) and uuid(s) which are specified by the input parameter `srcFiles` `uuid` and limited by `sliceSize` then output CAR to the specified directory `outputDir`.
+
+
+**func [GenerateCarFromFiles](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L73)**
+```go
+func GenerateCarFromFiles(outputDir string, srcFiles []string, sliceSize int64) (carFile string, err error)
+
+PARAMETER:
+    --outputDir    directory where CAR file(s) will be generated.
+    --srcFiles     file(s) where source file(s) is(are).
+    --sliceSize    bytes of each piece (default: 17179869184)
+
+RETURN:
+    --carFile      the CAR which generated.
+    --err          error information returned.
+```
+`GenerateCarFromFiles` returns the CAR which generated from the file(s) specified by the input parameter `srcDir` and limited by `sliceSize` then output CAR to the specified directory `outputDir`.
+
+
+**func [GenerateCarFromDir](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L96)**
+```go
+func GenerateCarFromDir(outputDir string, srcDir string, sliceSize int64) (carFile string, err error)
+
+PARAMETER:
+    --outputDir    directory where CAR file(s) will be generated.
+    --srcDir       folder where source file(s) is(are) in.
+    --sliceSize    bytes of each piece (default: 17179869184)
+
+RETURN:
+    --carFile      the CAR which generated.
+    --err          error information returned.
+```
+`GenerateCarFromDir` returns the CAR which generated from the folder specified by the input parameter `srcDir` and limited by `sliceSize` then output CAR to the specified directory `outputDir`.
+
+
+**func [GetCarRoot](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L55)**
+```go
+func GetCarRoot(destCar string) (cid string, err error)
+
+PARAMETER:
+    --destCar      the dest CAR file which want to get the root CID string.
+
+RETURN:
+    --cid          the root CID string of the destCar.
+    --err          error information returned.
+```
+`GetCarRoot` returns the root CIDs of the CAR which is specified by the input parameter `destCar`.
+
+
+**func [ListCarFile](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L19)**
+```go
+func ListCarFile(destCar string) (info []string, err error)
+
+PARAMETER:
+    --destCar      the dest CAR file which want to get the root CID string.
+
+RETURN:
+    --info         list of FILE/CID/UUID/SIZE string(s).
+    --err          error information returned.
+```
+`ListCarFile` returns list of FILE/CID/UUID/SIZE information in the CAR which is specified by the input parameter `destCar`.
+
+
+**func [RestoreCar](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L138)**
+```go
+func RestoreCar(outputDir string, srcCar string) (err error)
+
+PARAMETER:
+    --outputDir    directory where the original file(s) will be generated.
+    --srcCar       the source CAR file witch restore from.
+
+RETURN:
+    --err          error information returned.
+```
+`RestoreCar` returns the original file(s) in the CAR which is specified by the input parameter `srcCar`, and output original file(s) to `outputDir` where specified by the parameter.
+
 
 ## Examples
-Here is a example for using meta-lib.
-```go
-package main
-
-import (
-  log "github.com/FogMeta/meta-lib/logs"
-  meta_car "github.com/FogMeta/meta-lib/module/ipfs"
-)
-
-func main() {
-    genCarWithUuidDemo()
-
-    genCarFromFilesDemo()
-
-    genCarFromDirDemo()
-
-    return
-}
-
-func genCarWithUuidDemo() {
-    outputDir := "./test/output"
-    srcFiles := []string{
-      "./test/input/test0",
-      "./test/input/test4",
-      "./test/input/dir1/test1",
-      "./test/input/dir1/dir2/test2",
-      "./test/input/dir1/dir2/test3",
-    }
-    uuid := []string{
-      "94d6a0d0-3e76-45b7-9705-4d829e0e3ca8",
-      "571e4e2b-d50b-4ac2-a89f-07795b684148",
-      "36f4da38-a028-493a-a855-51b07269e709",
-      "e99d2819-09a8-4e53-8158-a48d8154e057",
-      "6631aa2a-5e89-4f98-b114-86bf4403f1c2",
-    }
-    sliceSize := 17179869184
-  
-    carFileName, err := meta_car.GenerateCarFromFilesWithUuid(outputDir, srcFiles, uuid, int64(sliceSize))
-    if err != nil {
-      log.GetLog().Error("Test create CAR file error:", err)
-      return
-    }
-  
-    log.GetLog().Info("create CAR file is:", carFileName)
-
-}
-
-func genCarFromFilesDemo() {
-    outputDir := "./test/output"
-    srcFiles := []string{
-      "./test/input/test0",
-      "./test/input/test4",
-      "./test/input/dir1/test1",
-      "./test/input/dir1/dir2/test2",
-      "./test/input/dir1/dir2/test3",
-    }
-    sliceSize := 17179869184
-  
-    carFileName, err := meta_car.GenerateCarFromFiles(outputDir, srcFiles, int64(sliceSize))
-    if err != nil {
-      log.GetLog().Error("Create CAR file error:", err)
-      return
-    }
-  
-    log.GetLog().Info("Create CAR file is:", carFileName)
-
-}
-
-func genCarFromDirDemo() {
-    outputDir := "./test/output"
-    srcDir := "./test/input/"
-    sliceSize := 17179869184
-  
-    carFileName, err := meta_car.GenerateCarFromDir(outputDir, srcDir, int64(sliceSize))
-    if err != nil {
-      log.GetLog().Error("Create CAR file error:", err)
-      return
-    }
-  
-    log.GetLog().Info("Create CAR file is:", carFileName)
-
-}
-```
-## Maintainers
+Here are examples for using meta-lib.
+* Generate CAR from file(s) and uuids which is(are) specified by the input parameter. [Example](https://github.com/FogMeta/meta-lib/blob/main/cmd/demo-api/main.go#L28)
+* Generate CAR from file(s) which is(are) specified by the input parameter. [Example](https://github.com/FogMeta/meta-lib/blob/main/cmd/demo-api/main.go#L56)
+* Generate CAR from a folder where source file(s) is(are) in. [Example](https://github.com/FogMeta/meta-lib/blob/main/cmd/demo-api/main.go#L77)
+* Get root CID of a CAR. [Example](https://github.com/FogMeta/meta-lib/blob/main/cmd/demo-api/main.go#L103)
+* List FILE/CID/UUID/SIZE in a CAR. [Example](https://github.com/FogMeta/meta-lib/blob/main/cmd/demo-api/main.go#L92)
 
 ## Contribute
 
