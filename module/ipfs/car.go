@@ -166,7 +166,7 @@ func printLinksNode(prefix string, node cid.Cid, ls *ipld.LinkSystem, infoList *
 				return err
 			}
 			if cidl, ok := cl.(cidlink.Link); ok {
-				info := fmt.Sprintf("FILE:%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
+				info := fmt.Sprintf("%s     CID:%s     UUID:%s     SIZE:%d\n", name, cidl.Cid, uuid, size)
 				*infoList = append(*infoList, info)
 				if err := printLinksNode(name, cidl.Cid, ls, infoList); err != nil {
 					return err
