@@ -9,18 +9,18 @@ import (
 )
 
 func main() {
-
+	log.GetLog().Info("===============================genCarWithUuidDemo=================================")
 	genCarWithUuidDemo()
-
+	log.GetLog().Info("===============================genCarFromFilesDemo================================")
 	genCarFromFilesDemo()
-
+	log.GetLog().Info("===============================genCarFromDirDemo==================================")
 	genCarFromDirDemo()
-
+	log.GetLog().Info("================================listCarDemo=======================================")
 	listCarDemo()
-
+	log.GetLog().Info("================================getCarRootDemo====================================")
 	getCarRootDemo()
-
-	genCarFromDirsDemo()
+	log.GetLog().Info("================================genCarFromDirsDemo================================")
+	// genCarFromDirsDemo()
 
 	return
 }
