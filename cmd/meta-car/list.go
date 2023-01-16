@@ -286,7 +286,7 @@ func printLinksNode(c *cli.Context, prefix string, node cid.Cid, ls *ipld.LinkSy
 			size := l.Tsize.Must().Int()
 			nameLen := len(name)
 			uuid := ""
-			uuidLen := len("-uuid-ce547c40-acf9-11e6-80f5-76304dec7eb7")
+			uuidLen := len("ce547c40-acf9-11e6-80f5-76304dec7eb7")
 			// TODO: split uuid string and check it
 			if nameLen > uuidLen {
 				uuid = name[nameLen-uuidLen+1:]
