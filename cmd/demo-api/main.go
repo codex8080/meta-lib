@@ -181,7 +181,7 @@ func GenCarFromDirs(outputDir string, srcDir []string, sliceSize int64) ([]CarIn
 			//to build car
 			carFileName, err := meta_car.GenerateCarFromFiles(outputDir, accDirs, sliceSize)
 			if err != nil {
-				log.GetLog().Errorf("%s size is %d and bigger than :%d", dir, dirSize, sliceSize)
+				log.GetLog().Error("generate CAR file error:", err)
 				continue
 			}
 
@@ -199,6 +199,20 @@ func GenCarFromDirs(outputDir string, srcDir []string, sliceSize int64) ([]CarIn
 
 		accSize += dirSize
 		accDirs = append(accDirs, dir)
+	}
+
+	if accSize > 0 {
+		carFileName, err := meta_car.GenerateCarFromFiles(outputDir, accDirs, sliceSize)
+		if err != nil {
+			log.GetLog().Error("generate CAR file error:", err)
+		}
+
+		carInfos = append(carInfos, CarInfo{
+			CarFile:     carFileName,
+			TotalSize:   accSize,
+			ContainDirs: accDirs,
+		})
+		log.GetLog().Info("Create CAR:", carFileName)
 	}
 
 	return carInfos, nil
