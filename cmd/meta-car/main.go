@@ -9,7 +9,7 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name:  "car",
+		Name:  "meta-car",
 		Usage: "Utility for working with car files",
 		Commands: []*cli.Command{
 			{
