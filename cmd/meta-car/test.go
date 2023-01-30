@@ -8,15 +8,15 @@ import (
 
 func CreateCarFileTest(c *cli.Context) error {
 
-	genCarWithUuidDemo()
-
-	genCarFromFilesDemo()
-
-	genCarFromDirDemo()
-
-	listCarDemo()
-
-	GetCarRootDemo()
+	//genCarWithUuidDemo()
+	//
+	//genCarFromFilesDemo()
+	//
+	//genCarFromDirDemo()
+	//
+	//listCarDemo()
+	//
+	//GetCarRootDemo()
 
 	return nil
 }
@@ -185,5 +185,18 @@ func GetCarRootDemo() {
 		OUTPUT:
 		2023-01-10T07:48:03.794Z        INFO    meta    meta-car/test.go:184    Root CID is:QmdYHTLyw6WkWERej5HaC4NfxmwUynebEGq4NuVQ7reuGM
 	*/
+
+}
+
+func genCarFromDirExDemo() {
+	outputDir := "./test/output"
+	srcDir := "./test/input/"
+	sliceSize := 17179869184
+
+	err := meta_car.GenerateCarFromDirEx(outputDir, srcDir, int64(sliceSize), true)
+	if err != nil {
+		log.GetLog().Error("Create car file error:", err)
+		return
+	}
 
 }

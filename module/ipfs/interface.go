@@ -16,6 +16,19 @@ import (
 	"runtime"
 )
 
+type DetailInfo struct {
+	FilePath string
+	FileName string
+	FileSize int64
+	CID      string
+	UUID     string
+}
+
+type CarInfo struct {
+	CarFileName string
+	Details     []DetailInfo
+}
+
 func ListCarFile(destCar string) ([]string, error) {
 	infoList := make([]string, 0)
 
@@ -114,6 +127,101 @@ func GenerateCarFromDir(outputDir string, srcDir string, sliceSize int64) (strin
 	}
 
 	return carFileName, nil
+}
+
+func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, withUUID bool) error {
+
+	if !util.ExistDir(outputDir) {
+		return xerrors.Errorf("Unexpected! The path of output dir does not exist")
+	}
+
+	files := util.GetFileListAsync([]string{srcDir}, withUUID)
+	accSize := int64(0)
+	accFiles := make([]string, 0)
+	accUUIDs := make([]string, 0)
+	remainFiles := make([]string, 0)
+	buildCars := make([]CarInfo, 0)
+	for item := range files {
+		fileSize := item.Info.Size()
+		if fileSize > sliceSize {
+			log.GetLog().Errorf("%s size is %d and bigger than: %d", item.Path, fileSize, sliceSize)
+			remainFiles = append(remainFiles, item.Path)
+			continue
+		}
+
+		if (accSize + fileSize) > sliceSize {
+			carFileName, detailStr, err := doGenerateCarWithUuid(outputDir, accFiles, accUUIDs)
+			if err != nil {
+				log.GetLog().Error("generate CAR file error:", err)
+				//TODO: move accFiles to remainFiles
+				continue
+			}
+
+			//one CAR generated
+			log.GetLog().Debug("Create CAR: ", carFileName)
+			log.GetLog().Debug("Create Detail: ", detailStr)
+
+			detailInfo := make([]DetailInfo, 0)
+			if len(accFiles) != len(accUUIDs) {
+				log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
+				continue
+			}
+
+			for i, uid := range accUUIDs {
+				detailInfo = append(detailInfo, DetailInfo{
+					FileName: accFiles[i],
+					UUID:     uid,
+				})
+			}
+
+			buildCars = append(buildCars, CarInfo{
+				CarFileName: carFileName,
+				Details:     detailInfo,
+			})
+
+			accSize = int64(0)
+			accFiles = accFiles[:0] //make([]string, 0)
+			accUUIDs = accUUIDs[:0]
+			continue
+		}
+
+		accSize += fileSize
+		accFiles = append(accFiles, item.Path)
+		accUUIDs = append(accUUIDs, item.Uuid)
+	}
+
+	if accSize > 0 {
+		carFileName, detailStr, err := doGenerateCarFrom(outputDir, accFiles)
+		if err != nil {
+			log.GetLog().Error("generate CAR file error:", err)
+			//TODO: move accFiles to remainFiles
+		}
+		//one CAR generated
+		log.GetLog().Debug("Create CAR: ", carFileName)
+		log.GetLog().Debug("Create Detail: ", detailStr)
+
+		detailInfo := make([]DetailInfo, 0)
+		if len(accFiles) != len(accUUIDs) {
+			log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
+		}
+
+		for i, uid := range accUUIDs {
+			detailInfo = append(detailInfo, DetailInfo{
+				FileName: accFiles[i],
+				UUID:     uid,
+			})
+		}
+
+		buildCars = append(buildCars, CarInfo{
+			CarFileName: carFileName,
+			Details:     detailInfo,
+		})
+
+	}
+
+	//TODO: write json file to output dir
+	log.GetLog().Debug("Build CARs Info:", buildCars)
+	return nil
 }
 
 func GenerateCarFromFilesWithUuid(outputDir string, srcFiles []string, uuid []string, sliceSize int64) (string, error) {
