@@ -29,6 +29,8 @@ type CarInfo struct {
 	CarFilePath string
 	CarFileName string
 	RootCid     string
+	PieceCID    string
+	PieceSize   int64
 	Details     []DetailInfo
 }
 
