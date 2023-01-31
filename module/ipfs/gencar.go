@@ -643,6 +643,7 @@ func doGenerateCarFromEx(outputPath string, srcFiles []string, withUUID bool) (s
 }
 
 func doGenerateCarWithUuid(outputPath string, srcFiles []string, uuidStr []string) (string, string, error) {
+
 	graphFiles := make([]util.Finfo, 0)
 	files := getFileInfoWithUuidAsync(srcFiles, uuidStr)
 	for item := range files {
@@ -650,6 +651,16 @@ func doGenerateCarWithUuid(outputPath string, srcFiles []string, uuidStr []strin
 	}
 
 	return buildGraph(graphFiles, outputPath)
+}
+
+func doGenerateCarWithUuidEx(outputPath string, srcFiles []string, uuidStr []string) (string, string, []DetailInfo, error) {
+	graphFiles := make([]util.Finfo, 0)
+	files := getFileInfoWithUuidAsync(srcFiles, uuidStr)
+	for item := range files {
+		graphFiles = append(graphFiles, item)
+	}
+
+	return buildGraphEx(graphFiles, outputPath)
 }
 
 func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error) {
@@ -816,6 +827,180 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 	detail := fmt.Sprintf("%s", fsNodeBytes)
 
 	return carFileName, detail, nil
+}
+
+func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, []DetailInfo, error) {
+
+	parentPath := "/"
+	ctx := context.Background()
+
+	bs2 := bstore.NewBlockstore(dss.MutexWrap(datastore.NewMapDatastore()))
+	dagServ := merkledag.NewDAGService(blockservice.New(bs2, offline.Exchange(bs2)))
+
+	cidBuilder, err := merkledag.PrefixForCidVersion(0)
+	if err != nil {
+		return "", "", nil, err
+	}
+	fileNodeMap := make(map[string]*dag.ProtoNode)
+	dirNodeMap := make(map[string]*dag.ProtoNode)
+
+	var rootNode *dag.ProtoNode
+	rootNode = unixfs.EmptyDirNode()
+	rootNode.SetCidBuilder(cidBuilder)
+	var rootKey = "root"
+	dirNodeMap[rootKey] = rootNode
+
+	parallel := runtime.NumCPU()
+	pchan := make(chan struct{}, parallel)
+	wg := sync.WaitGroup{}
+	lock := sync.Mutex{}
+	detailInfo := make([]DetailInfo, 0)
+	for i, item := range fileList {
+		wg.Add(1)
+		go func(i int, item util.Finfo) {
+			defer func() {
+				<-pchan
+				wg.Done()
+			}()
+			pchan <- struct{}{}
+			fileNode, err := BuildFileNode(item, dagServ, cidBuilder)
+			if err != nil {
+				log.GetLog().Warn(err)
+				return
+			}
+			fn, ok := fileNode.(*dag.ProtoNode)
+			if !ok {
+				emsg := "file node should be *dag.ProtoNode"
+				log.GetLog().Warn(emsg)
+				return
+			}
+			lock.Lock()
+			fileNodeMap[item.Path] = fn
+			lock.Unlock()
+			stat, _ := fileNode.Stat()
+			detailInfo = append(detailInfo, DetailInfo{
+				FilePath: item.Path,
+				FileName: item.Name,
+				FileSize: int64(stat.CumulativeSize),
+				CID:      fileNode.String(),
+				UUID:     item.Uuid,
+			})
+			log.GetLog().Infof("FILE:%s    CID:%s    UUID:%s      SIZE:%d\n", item.Path, fileNode, item.Uuid, stat.CumulativeSize)
+		}(i, item)
+	}
+	wg.Wait()
+
+	// build dir tree
+	for _, item := range fileList {
+		// log.GetLog().Info(item.Path)
+		// log.Infof("file name: %s, file size: %d, item size: %d, seek-start:%d, seek-end:%d", item.Name, item.Info.Size(), item.SeekEnd-item.SeekStart, item.SeekStart, item.SeekEnd)
+		dirStr := path.Dir(item.Path)
+		parentPath = path.Clean(parentPath)
+		// when parent path equal target path, and the parent path is also a file path
+		if parentPath == path.Clean(item.Path) {
+			dirStr = ""
+		} else if parentPath != "" && strings.HasPrefix(dirStr, parentPath) {
+			dirStr = dirStr[len(parentPath):]
+		}
+
+		if strings.HasPrefix(dirStr, "/") {
+			dirStr = dirStr[1:]
+		}
+		var dirList []string
+		if dirStr == "" {
+			dirList = []string{}
+		} else {
+			dirList = strings.Split(dirStr, "/")
+		}
+		fileNode, ok := fileNodeMap[item.Path]
+		if !ok {
+			panic("unexpected, missing file node")
+		}
+		if len(dirList) == 0 {
+			dirNodeMap[rootKey].AddNodeLink(item.Name+item.Uuid, fileNode)
+			continue
+		}
+		//log.Info(item.Path)
+		//log.GetLog().Info(dirList)
+		i := len(dirList) - 1
+		for ; i >= 0; i-- {
+			// get dirNodeMap by index
+			var ok bool
+			var dirNode *dag.ProtoNode
+			var parentNode *dag.ProtoNode
+			var parentKey string
+			dir := dirList[i]
+			dirKey := getDirKey(dirList, i)
+			//log.GetLog().Info(dirList)
+			//log.GetLog().Infof("dirKey: %s", dirKey)
+			dirNode, ok = dirNodeMap[dirKey]
+			if !ok {
+				dirNode = unixfs.EmptyDirNode()
+				dirNode.SetCidBuilder(cidBuilder)
+				dirNodeMap[dirKey] = dirNode
+			}
+			// add file node to its nearest parent node
+			if i == len(dirList)-1 {
+				dirNode.AddNodeLink(item.Name+item.Uuid, fileNode)
+			}
+			if i == 0 {
+				parentKey = rootKey
+			} else {
+				parentKey = getDirKey(dirList, i-1)
+			}
+			//log.GetLog().Infof("parentKey: %s", parentKey)
+			parentNode, ok = dirNodeMap[parentKey]
+			if !ok {
+				parentNode = unixfs.EmptyDirNode()
+				parentNode.SetCidBuilder(cidBuilder)
+				dirNodeMap[parentKey] = parentNode
+			}
+			if isLinked(parentNode, dir) {
+				parentNode, err = parentNode.UpdateNodeLink(dir, dirNode)
+				if err != nil {
+					return "", "", nil, err
+				}
+				dirNodeMap[parentKey] = parentNode
+			} else {
+				parentNode.AddNodeLink(dir, dirNode)
+			}
+		}
+	}
+
+	for _, node := range dirNodeMap {
+		// fmt.Printf("add node to store: %v\n", node)
+		// fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
+		dagServ.Add(ctx, node)
+	}
+
+	rootNode = dirNodeMap[rootKey]
+	carFileName := path.Join(outputPath, rootNode.Cid().String()+".car")
+	carF, err := os.Create(carFileName)
+	if err != nil {
+		return "", "", nil, err
+	}
+	defer carF.Close()
+	selector := allSelector()
+	sc := car.NewSelectiveCar(ctx, bs2, []car.Dag{{Root: rootNode.Cid(), Selector: selector}})
+	err = sc.Write(carF)
+
+	if err != nil {
+		return "", "", nil, err
+	}
+	//log.GetLog().Infof("generate car file completed, time elapsed: %s", time.Now().Sub(genCarStartTime))
+
+	fsBuilder := NewFSBuilder(rootNode, dagServ)
+	fsNode, err := fsBuilder.Build()
+	if err != nil {
+		return "", "", nil, err
+	}
+	fsNodeBytes, err := json.Marshal(fsNode)
+	if err != nil {
+		return "", "", nil, err
+	}
+	detail := fmt.Sprintf("%s", fsNodeBytes)
+
+	return carFileName, detail, detailInfo, nil
 }
 
 func Import(ctx context.Context, path string, st car.Store) (cid.Cid, error) {

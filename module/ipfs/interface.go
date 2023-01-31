@@ -26,6 +26,7 @@ type DetailInfo struct {
 
 type CarInfo struct {
 	CarFileName string
+	RootCid     string
 	Details     []DetailInfo
 }
 
@@ -150,7 +151,12 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 		}
 
 		if (accSize + fileSize) > sliceSize {
-			carFileName, detailStr, err := doGenerateCarWithUuid(outputDir, accFiles, accUUIDs)
+			if len(accFiles) != len(accUUIDs) {
+				log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
+				continue
+			}
+
+			carFileName, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
 			if err != nil {
 				log.GetLog().Error("generate CAR file error:", err)
 				//TODO: move accFiles to remainFiles
@@ -161,22 +167,9 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 			log.GetLog().Debug("Create CAR: ", carFileName)
 			log.GetLog().Debug("Create Detail: ", detailStr)
 
-			detailInfo := make([]DetailInfo, 0)
-			if len(accFiles) != len(accUUIDs) {
-				log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
-				continue
-			}
-
-			for i, uid := range accUUIDs {
-				detailInfo = append(detailInfo, DetailInfo{
-					FileName: accFiles[i],
-					UUID:     uid,
-				})
-			}
-
 			buildCars = append(buildCars, CarInfo{
 				CarFileName: carFileName,
-				Details:     detailInfo,
+				Details:     detaiInfo,
 			})
 
 			accSize = int64(0)
@@ -191,7 +184,11 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 	}
 
 	if accSize > 0 {
-		carFileName, detailStr, err := doGenerateCarFrom(outputDir, accFiles)
+		if len(accFiles) != len(accUUIDs) {
+			log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
+		}
+
+		carFileName, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
 		if err != nil {
 			log.GetLog().Error("generate CAR file error:", err)
 			//TODO: move accFiles to remainFiles
@@ -200,21 +197,9 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 		log.GetLog().Debug("Create CAR: ", carFileName)
 		log.GetLog().Debug("Create Detail: ", detailStr)
 
-		detailInfo := make([]DetailInfo, 0)
-		if len(accFiles) != len(accUUIDs) {
-			log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
-		}
-
-		for i, uid := range accUUIDs {
-			detailInfo = append(detailInfo, DetailInfo{
-				FileName: accFiles[i],
-				UUID:     uid,
-			})
-		}
-
 		buildCars = append(buildCars, CarInfo{
 			CarFileName: carFileName,
-			Details:     detailInfo,
+			Details:     detaiInfo,
 		})
 
 	}
