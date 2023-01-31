@@ -156,7 +156,7 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 				continue
 			}
 
-			carFileName, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
+			carFileName, rootCid, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
 			if err != nil {
 				log.GetLog().Error("generate CAR file error:", err)
 				//TODO: move accFiles to remainFiles
@@ -169,6 +169,7 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 
 			buildCars = append(buildCars, CarInfo{
 				CarFileName: carFileName,
+				RootCid:     rootCid,
 				Details:     detaiInfo,
 			})
 
@@ -188,7 +189,7 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 			log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
 		}
 
-		carFileName, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
+		carFileName, rootCid, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
 		if err != nil {
 			log.GetLog().Error("generate CAR file error:", err)
 			//TODO: move accFiles to remainFiles
@@ -199,6 +200,7 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 
 		buildCars = append(buildCars, CarInfo{
 			CarFileName: carFileName,
+			RootCid:     rootCid,
 			Details:     detaiInfo,
 		})
 

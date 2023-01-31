@@ -653,7 +653,7 @@ func doGenerateCarWithUuid(outputPath string, srcFiles []string, uuidStr []strin
 	return buildGraph(graphFiles, outputPath)
 }
 
-func doGenerateCarWithUuidEx(outputPath string, srcFiles []string, uuidStr []string) (string, string, []DetailInfo, error) {
+func doGenerateCarWithUuidEx(outputPath string, srcFiles []string, uuidStr []string) (string, string, string, []DetailInfo, error) {
 	graphFiles := make([]util.Finfo, 0)
 	files := getFileInfoWithUuidAsync(srcFiles, uuidStr)
 	for item := range files {
@@ -829,7 +829,7 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 	return carFileName, detail, nil
 }
 
-func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, []DetailInfo, error) {
+func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, string, []DetailInfo, error) {
 
 	parentPath := "/"
 	ctx := context.Background()
@@ -839,7 +839,7 @@ func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, []D
 
 	cidBuilder, err := merkledag.PrefixForCidVersion(0)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", nil, err
 	}
 	fileNodeMap := make(map[string]*dag.ProtoNode)
 	dirNodeMap := make(map[string]*dag.ProtoNode)
@@ -958,7 +958,7 @@ func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, []D
 			if isLinked(parentNode, dir) {
 				parentNode, err = parentNode.UpdateNodeLink(dir, dirNode)
 				if err != nil {
-					return "", "", nil, err
+					return "", "", "", nil, err
 				}
 				dirNodeMap[parentKey] = parentNode
 			} else {
@@ -974,10 +974,11 @@ func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, []D
 	}
 
 	rootNode = dirNodeMap[rootKey]
+	rootCid := rootNode.Cid().String()
 	carFileName := path.Join(outputPath, rootNode.Cid().String()+".car")
 	carF, err := os.Create(carFileName)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", nil, err
 	}
 	defer carF.Close()
 	selector := allSelector()
@@ -985,22 +986,22 @@ func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, []D
 	err = sc.Write(carF)
 
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", nil, err
 	}
 	//log.GetLog().Infof("generate car file completed, time elapsed: %s", time.Now().Sub(genCarStartTime))
 
 	fsBuilder := NewFSBuilder(rootNode, dagServ)
 	fsNode, err := fsBuilder.Build()
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", nil, err
 	}
 	fsNodeBytes, err := json.Marshal(fsNode)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", nil, err
 	}
 	detail := fmt.Sprintf("%s", fsNodeBytes)
 
-	return carFileName, detail, detailInfo, nil
+	return carFileName, rootCid, detail, detailInfo, nil
 }
 
 func Import(ctx context.Context, path string, st car.Store) (cid.Cid, error) {
