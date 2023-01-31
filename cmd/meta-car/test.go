@@ -196,10 +196,12 @@ func genCarFromDirExDemo() {
 	srcDir := "./test/input"
 	sliceSize := 17179869184
 
-	err := meta_car.GenerateCarFromDirEx(outputDir, srcDir, int64(sliceSize), true)
+	info, err := meta_car.GenerateCarFromDirEx(outputDir, srcDir, int64(sliceSize), true)
 	if err != nil {
 		log.GetLog().Error("Create car file error:", err)
 		return
 	}
+
+	log.GetLog().Info("Build Car Info: ", info)
 
 }

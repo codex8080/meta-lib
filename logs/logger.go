@@ -9,7 +9,7 @@ var log *logging.ZapEventLogger
 func GetLog() *logging.ZapEventLogger {
 	if log == nil {
 		log = logging.Logger("meta")
-		logging.SetLogLevel("meta", "DEBUG")
+		logging.SetLogLevel("meta", "INFO")
 	}
 
 	return log

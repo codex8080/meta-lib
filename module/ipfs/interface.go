@@ -130,10 +130,10 @@ func GenerateCarFromDir(outputDir string, srcDir string, sliceSize int64) (strin
 	return carFileName, nil
 }
 
-func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, withUUID bool) error {
+func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, withUUID bool) ([]CarInfo, error) {
 
 	if !util.ExistDir(outputDir) {
-		return xerrors.Errorf("Unexpected! The path of output dir does not exist")
+		return nil, xerrors.Errorf("Unexpected! The path of output dir does not exist")
 	}
 
 	files := util.GetFileListAsync([]string{srcDir}, withUUID)
@@ -206,7 +206,7 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 
 	//TODO: write json file to output dir
 	log.GetLog().Debug("Build CARs Info:", buildCars)
-	return nil
+	return buildCars, nil
 }
 
 func GenerateCarFromFilesWithUuid(outputDir string, srcFiles []string, uuid []string, sliceSize int64) (string, error) {
