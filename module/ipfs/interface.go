@@ -13,6 +13,7 @@ import (
 	"golang.org/x/xerrors"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 )
 
@@ -25,6 +26,7 @@ type DetailInfo struct {
 }
 
 type CarInfo struct {
+	CarFilePath string
 	CarFileName string
 	RootCid     string
 	Details     []DetailInfo
@@ -156,7 +158,7 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 				continue
 			}
 
-			carFileName, rootCid, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
+			carFile, rootCid, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
 			if err != nil {
 				log.GetLog().Error("generate CAR file error:", err)
 				//TODO: move accFiles to remainFiles
@@ -164,11 +166,12 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 			}
 
 			//one CAR generated
-			log.GetLog().Debug("Create CAR: ", carFileName)
+			log.GetLog().Debug("Create CAR: ", carFile)
 			log.GetLog().Debug("Create Detail: ", detailStr)
 
 			buildCars = append(buildCars, CarInfo{
-				CarFileName: carFileName,
+				CarFilePath: carFile,
+				CarFileName: filepath.Base(carFile),
 				RootCid:     rootCid,
 				Details:     detaiInfo,
 			})
@@ -189,17 +192,18 @@ func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, with
 			log.GetLog().Error("The length of accFiles should be the same as the length of accUUIDs.")
 		}
 
-		carFileName, rootCid, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
+		carFile, rootCid, detailStr, detaiInfo, err := doGenerateCarWithUuidEx(outputDir, accFiles, accUUIDs)
 		if err != nil {
 			log.GetLog().Error("generate CAR file error:", err)
 			//TODO: move accFiles to remainFiles
 		}
 		//one CAR generated
-		log.GetLog().Debug("Create CAR: ", carFileName)
+		log.GetLog().Debug("Create CAR: ", carFile)
 		log.GetLog().Debug("Create Detail: ", detailStr)
 
 		buildCars = append(buildCars, CarInfo{
-			CarFileName: carFileName,
+			CarFilePath: carFile,
+			CarFileName: filepath.Base(carFile),
 			RootCid:     rootCid,
 			Details:     detaiInfo,
 		})
