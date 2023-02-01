@@ -18,20 +18,20 @@ import (
 )
 
 type DetailInfo struct {
-	FilePath string
-	FileName string
-	FileSize int64
-	CID      string
-	UUID     string
+	FilePath string `json:"file_path"`
+	FileName string `json:"file_name"`
+	FileSize int64  `json:"file_size"`
+	CID      string `json:"cid"`
+	UUID     string `json:"uuid"`
 }
 
 type CarInfo struct {
-	CarFilePath string
-	CarFileName string
-	RootCid     string
-	PieceCID    string
-	PieceSize   int64
-	Details     []DetailInfo
+	CarFilePath string       `json:"car_file_path"`
+	CarFileName string       `json:"car_file_name"`
+	RootCid     string       `json:"root_cid"`
+	PieceCID    string       `json:"piece_cid"`
+	PieceSize   int64        `json:"piece_size"`
+	Details     []DetailInfo `json:"details"`
 }
 
 func ListCarFile(destCar string) ([]string, error) {
