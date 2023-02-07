@@ -1282,6 +1282,7 @@ func exportFileInCar(nd ipfsfiles.Node, fpath string) error {
 
 func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) error {
 	if _, err := os.Lstat(fpath); err == nil {
+		log.GetLog().Info("error export file to:", fpath)
 		return ErrPathExistsOverwrite
 	} else if !os.IsNotExist(err) {
 		return err
@@ -1291,6 +1292,7 @@ func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) e
 		return os.Symlink(nd.Target, fpath)
 	case ipfsfiles.File:
 		if path.Base(fpath) == targetName {
+			log.GetLog().Info("export file to:", fpath)
 			f, err := createNewFile(fpath)
 			defer f.Close()
 			if err != nil {

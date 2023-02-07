@@ -18,7 +18,9 @@ func CreateCarFileTest(c *cli.Context) error {
 	//
 	//GetCarRootDemo()
 
-	genCarFromDirExDemo()
+	//genCarFromDirExDemo()
+
+	restoreFileFromCarDemo()
 
 	return nil
 }
@@ -203,5 +205,21 @@ func genCarFromDirExDemo() {
 	}
 
 	log.GetLog().Info("Build Car Info: ", info)
+
+}
+
+func restoreFileFromCarDemo() {
+	log.SetLogLevel("DEBUG")
+	outputDir := "./test/output/restore"
+	srcCar := "./test/output/QmY7SuQCDgiQRwYcYYHbmpjiPZMExrC8Cc2X5z5dTp9Den.car"
+	inFile := "test255e1a161-da64-47f7-b763-f5fe8f30ac8d"
+
+	err := meta_car.RestoreFileFromCar(outputDir, srcCar, inFile)
+	if err != nil {
+		log.GetLog().Error("Create car file error:", err)
+		return
+	}
+
+	log.GetLog().Info("Restore Car Successed.")
 
 }
