@@ -3,6 +3,7 @@ package ipfs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	log "github.com/FogMeta/meta-lib/logs"
 	"github.com/FogMeta/meta-lib/util"
@@ -36,6 +37,9 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
+
+	ipfsfiles "github.com/ipfs/go-ipfs-files"
 )
 
 func doGenerateCar(sliceSize int64, parentPath, targetPath, carDir, graphName string, parallel int, isUuid bool) error {
@@ -1215,4 +1219,111 @@ func Merge(dir string, parallel int) {
 	}
 	close(mergeCh)
 	wg.Wait()
+}
+
+var ErrInvalidDirectoryEntry = errors.New("invalid directory entry name")
+var ErrPathExistsOverwrite = errors.New("path already exists and overwriting is not allowed")
+var invalidChars = `/` + "\x00"
+
+func isValidFilename(filename string) bool {
+	return !strings.ContainsAny(filename, invalidChars)
+}
+
+func createNewFile(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_EXCL|os.O_CREATE|os.O_WRONLY|syscall.O_NOFOLLOW, 0666)
+}
+
+// WriteTo writes the given node to the local filesystem at fpath.
+func exportFileInCar(nd ipfsfiles.Node, fpath string) error {
+	if _, err := os.Lstat(fpath); err == nil {
+		return ErrPathExistsOverwrite
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	switch nd := nd.(type) {
+	case *ipfsfiles.Symlink:
+		return os.Symlink(nd.Target, fpath)
+	case ipfsfiles.File:
+		f, err := createNewFile(fpath)
+		defer f.Close()
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(f, nd)
+		if err != nil {
+			return err
+		}
+		return nil
+	case ipfsfiles.Directory:
+		err := os.Mkdir(fpath, 0777)
+		if err != nil {
+			return err
+		}
+
+		entries := nd.Entries()
+		for entries.Next() {
+			entryName := entries.Name()
+			if entryName == "" ||
+				entryName == "." ||
+				entryName == ".." ||
+				!isValidFilename(entryName) {
+				return ErrInvalidDirectoryEntry
+			}
+			child := filepath.Join(fpath, entryName)
+			if err := exportFileInCar(entries.Node(), child); err != nil {
+				return err
+			}
+		}
+		return entries.Err()
+	default:
+		return fmt.Errorf("file type %T at %q is not supported", nd, fpath)
+	}
+}
+
+func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) error {
+	if _, err := os.Lstat(fpath); err == nil {
+		return ErrPathExistsOverwrite
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	switch nd := nd.(type) {
+	case *ipfsfiles.Symlink:
+		return os.Symlink(nd.Target, fpath)
+	case ipfsfiles.File:
+		if path.Base(fpath) == targetName {
+			f, err := createNewFile(fpath)
+			defer f.Close()
+			if err != nil {
+				return err
+			}
+			_, err = io.Copy(f, nd)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	case ipfsfiles.Directory:
+		err := os.Mkdir(fpath, 0777)
+		if err != nil {
+			return err
+		}
+
+		entries := nd.Entries()
+		for entries.Next() {
+			entryName := entries.Name()
+			if entryName == "" ||
+				entryName == "." ||
+				entryName == ".." ||
+				!isValidFilename(entryName) {
+				return ErrInvalidDirectoryEntry
+			}
+			child := filepath.Join(fpath, entryName)
+			if err := exportFileInCarByName(entries.Node(), child, targetName); err != nil {
+				return err
+			}
+		}
+		return entries.Err()
+	default:
+		return fmt.Errorf("file type %T at %q is not supported", nd, fpath)
+	}
 }
