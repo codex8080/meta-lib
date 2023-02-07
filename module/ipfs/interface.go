@@ -246,8 +246,8 @@ func RestoreCar(outputDir string, srcCar string) error {
 	return nil
 }
 
-func RestoreFileFromCar(outputDir string, srcCar string, inFileName string) error {
-	carToEx(srcCar, outputDir, inFileName)
+func ExtractFileFromCar(outputDir string, srcCar string, inFileName string) error {
+	extractFromCar(srcCar, outputDir, inFileName)
 	fmt.Println("completed!")
 	return nil
 }

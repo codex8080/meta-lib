@@ -1330,7 +1330,7 @@ func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) e
 	}
 }
 
-func carToEx(carPath, outputDir string, inFileName string) {
+func extractFromCar(carPath, outputDir string, inFileName string) {
 	ctx := context.Background()
 	bs2 := bstore.NewBlockstore(dss.MutexWrap(datastore.NewMapDatastore()))
 	rdag := merkledag.NewDAGService(blockservice.New(bs2, offline.Exchange(bs2)))
