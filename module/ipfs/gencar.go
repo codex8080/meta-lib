@@ -1073,7 +1073,7 @@ func NodeWriteTo(nd files.Node, fpath string) error {
 	}
 }
 
-func CarTo(carPath, outputDir string, parallel int) {
+func carTo(carPath, outputDir string, parallel int) {
 	ctx := context.Background()
 	bs2 := bstore.NewBlockstore(dss.MutexWrap(datastore.NewMapDatastore()))
 	rdag := merkledag.NewDAGService(blockservice.New(bs2, offline.Exchange(bs2)))
@@ -1145,7 +1145,7 @@ func CarTo(carPath, outputDir string, parallel int) {
 	wg.Wait()
 }
 
-func Merge(dir string, parallel int) {
+func merge(dir string, parallel int) {
 	wg := sync.WaitGroup{}
 	limitCh := make(chan struct{}, parallel)
 	mergeCh := make(chan string)
@@ -1326,4 +1326,76 @@ func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) e
 	default:
 		return fmt.Errorf("file type %T at %q is not supported", nd, fpath)
 	}
+}
+
+func carToEx(carPath, outputDir string, inFileName string) {
+	ctx := context.Background()
+	bs2 := bstore.NewBlockstore(dss.MutexWrap(datastore.NewMapDatastore()))
+	rdag := merkledag.NewDAGService(blockservice.New(bs2, offline.Exchange(bs2)))
+
+	workerCh := make(chan func())
+	go func() {
+		defer close(workerCh)
+		err := filepath.Walk(carPath, func(path string, fi os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if fi.IsDir() {
+				return nil
+			}
+			if strings.ToLower(pa.Ext(fi.Name())) != ".car" {
+				log.GetLog().Warn(path, ", it's not a CAR file, skip it")
+				return nil
+			}
+			workerCh <- func() {
+				log.GetLog().Info(path)
+				root, err := Import(ctx, path, bs2)
+				if err != nil {
+					log.GetLog().Error("import error, ", err)
+					return
+				}
+				nd, err := rdag.Get(ctx, root)
+				if err != nil {
+					log.GetLog().Error("dagService.Get error, ", err)
+					return
+				}
+				file, err := unixfile.NewUnixfsFile(ctx, rdag, nd)
+				if err != nil {
+					log.GetLog().Error("NewUnixfsFile error, ", err)
+					return
+				}
+				err = exportFileInCarByName(file, outputDir, inFileName)
+				if err != nil {
+					log.GetLog().Error("NodeWriteTo error, ", err)
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			log.GetLog().Error("Walk path failed, ", err)
+		}
+	}()
+
+	limitCh := make(chan struct{}, runtime.NumCPU())
+	wg := sync.WaitGroup{}
+	func() {
+		for {
+			select {
+			case taskFunc, ok := <-workerCh:
+				if !ok {
+					return
+				}
+				limitCh <- struct{}{}
+				wg.Add(1)
+				go func() {
+					defer func() {
+						<-limitCh
+						wg.Done()
+					}()
+					taskFunc()
+				}()
+			}
+		}
+	}()
+	wg.Wait()
 }

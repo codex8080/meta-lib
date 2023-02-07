@@ -239,9 +239,15 @@ func GenerateCarFromFilesWithUuid(outputDir string, srcFiles []string, uuid []st
 func RestoreCar(outputDir string, srcCar string) error {
 
 	parallel := runtime.NumCPU()
-	CarTo(srcCar, outputDir, parallel)
-	Merge(outputDir, parallel)
+	carTo(srcCar, outputDir, parallel)
+	merge(outputDir, parallel)
 	fmt.Println("completed!")
 
+	return nil
+}
+
+func RestoreFileFromCar(outputDir string, srcCar string, inFileName string) error {
+	carToEx(srcCar, outputDir, inFileName)
+	fmt.Println("completed!")
 	return nil
 }
