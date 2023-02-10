@@ -3,6 +3,7 @@ package ipfs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	log "github.com/FogMeta/meta-lib/logs"
 	"github.com/FogMeta/meta-lib/util"
@@ -36,6 +37,9 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
+
+	ipfsfiles "github.com/ipfs/go-ipfs-files"
 )
 
 func doGenerateCar(sliceSize int64, parentPath, targetPath, carDir, graphName string, parallel int, isUuid bool) error {
@@ -623,8 +627,13 @@ func getFileInfoWithUuidAsync(srcFiles []string, uuidStr []string) chan util.Fin
 
 func doGenerateCarFrom(outputPath string, srcFiles []string) (string, string, error) {
 
+	return doGenerateCarFromEx(outputPath, srcFiles, false)
+}
+
+func doGenerateCarFromEx(outputPath string, srcFiles []string, withUUID bool) (string, string, error) {
+
 	graphFiles := make([]util.Finfo, 0)
-	files := util.GetFileListAsync(srcFiles, false)
+	files := util.GetFileListAsync(srcFiles, withUUID)
 	for item := range files {
 		graphFiles = append(graphFiles, item)
 	}
@@ -638,6 +647,7 @@ func doGenerateCarFrom(outputPath string, srcFiles []string) (string, string, er
 }
 
 func doGenerateCarWithUuid(outputPath string, srcFiles []string, uuidStr []string) (string, string, error) {
+
 	graphFiles := make([]util.Finfo, 0)
 	files := getFileInfoWithUuidAsync(srcFiles, uuidStr)
 	for item := range files {
@@ -645,6 +655,16 @@ func doGenerateCarWithUuid(outputPath string, srcFiles []string, uuidStr []strin
 	}
 
 	return buildGraph(graphFiles, outputPath)
+}
+
+func doGenerateCarWithUuidEx(outputPath string, srcFiles []string, uuidStr []string) (string, string, string, []DetailInfo, error) {
+	graphFiles := make([]util.Finfo, 0)
+	files := getFileInfoWithUuidAsync(srcFiles, uuidStr)
+	for item := range files {
+		graphFiles = append(graphFiles, item)
+	}
+
+	return buildGraphEx(graphFiles, outputPath)
 }
 
 func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error) {
@@ -813,6 +833,181 @@ func buildGraph(fileList []util.Finfo, outputPath string) (string, string, error
 	return carFileName, detail, nil
 }
 
+func buildGraphEx(fileList []util.Finfo, outputPath string) (string, string, string, []DetailInfo, error) {
+
+	parentPath := "/"
+	ctx := context.Background()
+
+	bs2 := bstore.NewBlockstore(dss.MutexWrap(datastore.NewMapDatastore()))
+	dagServ := merkledag.NewDAGService(blockservice.New(bs2, offline.Exchange(bs2)))
+
+	cidBuilder, err := merkledag.PrefixForCidVersion(0)
+	if err != nil {
+		return "", "", "", nil, err
+	}
+	fileNodeMap := make(map[string]*dag.ProtoNode)
+	dirNodeMap := make(map[string]*dag.ProtoNode)
+
+	var rootNode *dag.ProtoNode
+	rootNode = unixfs.EmptyDirNode()
+	rootNode.SetCidBuilder(cidBuilder)
+	var rootKey = "root"
+	dirNodeMap[rootKey] = rootNode
+
+	parallel := runtime.NumCPU()
+	pchan := make(chan struct{}, parallel)
+	wg := sync.WaitGroup{}
+	lock := sync.Mutex{}
+	detailInfo := make([]DetailInfo, 0)
+	for i, item := range fileList {
+		wg.Add(1)
+		go func(i int, item util.Finfo) {
+			defer func() {
+				<-pchan
+				wg.Done()
+			}()
+			pchan <- struct{}{}
+			fileNode, err := BuildFileNode(item, dagServ, cidBuilder)
+			if err != nil {
+				log.GetLog().Warn(err)
+				return
+			}
+			fn, ok := fileNode.(*dag.ProtoNode)
+			if !ok {
+				emsg := "file node should be *dag.ProtoNode"
+				log.GetLog().Warn(emsg)
+				return
+			}
+			lock.Lock()
+			fileNodeMap[item.Path] = fn
+			lock.Unlock()
+			stat, _ := fileNode.Stat()
+			detailInfo = append(detailInfo, DetailInfo{
+				FilePath: item.Path,
+				FileName: item.Name,
+				FileSize: int64(stat.CumulativeSize),
+				CID:      fileNode.String(),
+				UUID:     item.Uuid,
+			})
+			log.GetLog().Infof("FILE:%s    CID:%s    UUID:%s      SIZE:%d\n", item.Path, fileNode, item.Uuid, stat.CumulativeSize)
+		}(i, item)
+	}
+	wg.Wait()
+
+	// build dir tree
+	for _, item := range fileList {
+		// log.GetLog().Info(item.Path)
+		// log.Infof("file name: %s, file size: %d, item size: %d, seek-start:%d, seek-end:%d", item.Name, item.Info.Size(), item.SeekEnd-item.SeekStart, item.SeekStart, item.SeekEnd)
+		dirStr := path.Dir(item.Path)
+		parentPath = path.Clean(parentPath)
+		// when parent path equal target path, and the parent path is also a file path
+		if parentPath == path.Clean(item.Path) {
+			dirStr = ""
+		} else if parentPath != "" && strings.HasPrefix(dirStr, parentPath) {
+			dirStr = dirStr[len(parentPath):]
+		}
+
+		if strings.HasPrefix(dirStr, "/") {
+			dirStr = dirStr[1:]
+		}
+		var dirList []string
+		if dirStr == "" {
+			dirList = []string{}
+		} else {
+			dirList = strings.Split(dirStr, "/")
+		}
+		fileNode, ok := fileNodeMap[item.Path]
+		if !ok {
+			panic("unexpected, missing file node")
+		}
+		if len(dirList) == 0 {
+			dirNodeMap[rootKey].AddNodeLink(item.Name+item.Uuid, fileNode)
+			continue
+		}
+		//log.Info(item.Path)
+		//log.GetLog().Info(dirList)
+		i := len(dirList) - 1
+		for ; i >= 0; i-- {
+			// get dirNodeMap by index
+			var ok bool
+			var dirNode *dag.ProtoNode
+			var parentNode *dag.ProtoNode
+			var parentKey string
+			dir := dirList[i]
+			dirKey := getDirKey(dirList, i)
+			//log.GetLog().Info(dirList)
+			//log.GetLog().Infof("dirKey: %s", dirKey)
+			dirNode, ok = dirNodeMap[dirKey]
+			if !ok {
+				dirNode = unixfs.EmptyDirNode()
+				dirNode.SetCidBuilder(cidBuilder)
+				dirNodeMap[dirKey] = dirNode
+			}
+			// add file node to its nearest parent node
+			if i == len(dirList)-1 {
+				dirNode.AddNodeLink(item.Name+item.Uuid, fileNode)
+			}
+			if i == 0 {
+				parentKey = rootKey
+			} else {
+				parentKey = getDirKey(dirList, i-1)
+			}
+			//log.GetLog().Infof("parentKey: %s", parentKey)
+			parentNode, ok = dirNodeMap[parentKey]
+			if !ok {
+				parentNode = unixfs.EmptyDirNode()
+				parentNode.SetCidBuilder(cidBuilder)
+				dirNodeMap[parentKey] = parentNode
+			}
+			if isLinked(parentNode, dir) {
+				parentNode, err = parentNode.UpdateNodeLink(dir, dirNode)
+				if err != nil {
+					return "", "", "", nil, err
+				}
+				dirNodeMap[parentKey] = parentNode
+			} else {
+				parentNode.AddNodeLink(dir, dirNode)
+			}
+		}
+	}
+
+	for _, node := range dirNodeMap {
+		// fmt.Printf("add node to store: %v\n", node)
+		// fmt.Printf("key: %s, links: %v\n", key, len(node.Links()))
+		dagServ.Add(ctx, node)
+	}
+
+	rootNode = dirNodeMap[rootKey]
+	rootCid := rootNode.Cid().String()
+	carFileName := path.Join(outputPath, rootNode.Cid().String()+".car")
+	carF, err := os.Create(carFileName)
+	if err != nil {
+		return "", "", "", nil, err
+	}
+	defer carF.Close()
+	selector := allSelector()
+	sc := car.NewSelectiveCar(ctx, bs2, []car.Dag{{Root: rootNode.Cid(), Selector: selector}})
+	err = sc.Write(carF)
+
+	if err != nil {
+		return "", "", "", nil, err
+	}
+	//log.GetLog().Infof("generate car file completed, time elapsed: %s", time.Now().Sub(genCarStartTime))
+
+	fsBuilder := NewFSBuilder(rootNode, dagServ)
+	fsNode, err := fsBuilder.Build()
+	if err != nil {
+		return "", "", "", nil, err
+	}
+	fsNodeBytes, err := json.Marshal(fsNode)
+	if err != nil {
+		return "", "", "", nil, err
+	}
+	detail := fmt.Sprintf("%s", fsNodeBytes)
+
+	return carFileName, rootCid, detail, detailInfo, nil
+}
+
 func Import(ctx context.Context, path string, st car.Store) (cid.Cid, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -878,7 +1073,7 @@ func NodeWriteTo(nd files.Node, fpath string) error {
 	}
 }
 
-func CarTo(carPath, outputDir string, parallel int) {
+func carTo(carPath, outputDir string, parallel int) {
 	ctx := context.Background()
 	bs2 := bstore.NewBlockstore(dss.MutexWrap(datastore.NewMapDatastore()))
 	rdag := merkledag.NewDAGService(blockservice.New(bs2, offline.Exchange(bs2)))
@@ -950,7 +1145,7 @@ func CarTo(carPath, outputDir string, parallel int) {
 	wg.Wait()
 }
 
-func Merge(dir string, parallel int) {
+func merge(dir string, parallel int) {
 	wg := sync.WaitGroup{}
 	limitCh := make(chan struct{}, parallel)
 	mergeCh := make(chan string)
@@ -1023,5 +1218,186 @@ func Merge(dir string, parallel int) {
 		log.GetLog().Error("Walk path failed, ", err)
 	}
 	close(mergeCh)
+	wg.Wait()
+}
+
+var ErrInvalidDirectoryEntry = errors.New("invalid directory entry name")
+var ErrPathExistsOverwrite = errors.New("path already exists and overwriting is not allowed")
+var invalidChars = `/` + "\x00"
+
+func isValidFilename(filename string) bool {
+	return !strings.ContainsAny(filename, invalidChars)
+}
+
+func createNewFile(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_EXCL|os.O_CREATE|os.O_WRONLY|syscall.O_NOFOLLOW, 0666)
+}
+
+// WriteTo writes the given node to the local filesystem at fpath.
+func exportFileInCar(nd ipfsfiles.Node, fpath string) error {
+	if _, err := os.Lstat(fpath); err == nil {
+		return ErrPathExistsOverwrite
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	switch nd := nd.(type) {
+	case *ipfsfiles.Symlink:
+		return os.Symlink(nd.Target, fpath)
+	case ipfsfiles.File:
+		f, err := createNewFile(fpath)
+		defer f.Close()
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(f, nd)
+		if err != nil {
+			return err
+		}
+		return nil
+	case ipfsfiles.Directory:
+		err := os.Mkdir(fpath, 0777)
+		if err != nil {
+			return err
+		}
+
+		entries := nd.Entries()
+		for entries.Next() {
+			entryName := entries.Name()
+			if entryName == "" ||
+				entryName == "." ||
+				entryName == ".." ||
+				!isValidFilename(entryName) {
+				return ErrInvalidDirectoryEntry
+			}
+			child := filepath.Join(fpath, entryName)
+			if err := exportFileInCar(entries.Node(), child); err != nil {
+				return err
+			}
+		}
+		return entries.Err()
+	default:
+		return fmt.Errorf("file type %T at %q is not supported", nd, fpath)
+	}
+}
+
+func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) error {
+	if _, err := os.Lstat(fpath); err == nil {
+		log.GetLog().Info("error export file to:", fpath)
+		return ErrPathExistsOverwrite
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	switch nd := nd.(type) {
+	case *ipfsfiles.Symlink:
+		return os.Symlink(nd.Target, fpath)
+	case ipfsfiles.File:
+		if path.Base(fpath) == targetName {
+			log.GetLog().Info("export file to:", fpath)
+			f, err := createNewFile(fpath)
+			defer f.Close()
+			if err != nil {
+				return err
+			}
+			_, err = io.Copy(f, nd)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	case ipfsfiles.Directory:
+		err := os.Mkdir(fpath, 0777)
+		if err != nil {
+			return err
+		}
+
+		entries := nd.Entries()
+		for entries.Next() {
+			entryName := entries.Name()
+			if entryName == "" ||
+				entryName == "." ||
+				entryName == ".." ||
+				!isValidFilename(entryName) {
+				return ErrInvalidDirectoryEntry
+			}
+			child := filepath.Join(fpath, entryName)
+			if err := exportFileInCarByName(entries.Node(), child, targetName); err != nil {
+				return err
+			}
+		}
+		return entries.Err()
+	default:
+		return fmt.Errorf("file type %T at %q is not supported", nd, fpath)
+	}
+}
+
+func extractFromCar(carPath, outputDir string, inFileName string) {
+	ctx := context.Background()
+	bs2 := bstore.NewBlockstore(dss.MutexWrap(datastore.NewMapDatastore()))
+	rdag := merkledag.NewDAGService(blockservice.New(bs2, offline.Exchange(bs2)))
+
+	workerCh := make(chan func())
+	go func() {
+		defer close(workerCh)
+		err := filepath.Walk(carPath, func(path string, fi os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if fi.IsDir() {
+				return nil
+			}
+			if strings.ToLower(pa.Ext(fi.Name())) != ".car" {
+				log.GetLog().Warn(path, ", it's not a CAR file, skip it")
+				return nil
+			}
+			workerCh <- func() {
+				log.GetLog().Info(path)
+				root, err := Import(ctx, path, bs2)
+				if err != nil {
+					log.GetLog().Error("import error, ", err)
+					return
+				}
+				nd, err := rdag.Get(ctx, root)
+				if err != nil {
+					log.GetLog().Error("dagService.Get error, ", err)
+					return
+				}
+				file, err := unixfile.NewUnixfsFile(ctx, rdag, nd)
+				if err != nil {
+					log.GetLog().Error("NewUnixfsFile error, ", err)
+					return
+				}
+				err = exportFileInCarByName(file, outputDir, inFileName)
+				if err != nil {
+					log.GetLog().Error("NodeWriteTo error, ", err)
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			log.GetLog().Error("Walk path failed, ", err)
+		}
+	}()
+
+	limitCh := make(chan struct{}, runtime.NumCPU())
+	wg := sync.WaitGroup{}
+	func() {
+		for {
+			select {
+			case taskFunc, ok := <-workerCh:
+				if !ok {
+					return
+				}
+				limitCh <- struct{}{}
+				wg.Add(1)
+				go func() {
+					defer func() {
+						<-limitCh
+						wg.Done()
+					}()
+					taskFunc()
+				}()
+			}
+		}
+	}()
 	wg.Wait()
 }

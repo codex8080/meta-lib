@@ -8,15 +8,19 @@ import (
 
 func CreateCarFileTest(c *cli.Context) error {
 
-	genCarWithUuidDemo()
+	//genCarWithUuidDemo()
+	//
+	//genCarFromFilesDemo()
+	//
+	//genCarFromDirDemo()
+	//
+	//listCarDemo()
+	//
+	//GetCarRootDemo()
 
-	genCarFromFilesDemo()
+	//genCarFromDirExDemo()
 
-	genCarFromDirDemo()
-
-	listCarDemo()
-
-	GetCarRootDemo()
+	//extractFileFromCarDemo()
 
 	return nil
 }
@@ -118,7 +122,7 @@ func genCarFromFilesDemo() {
 
 func genCarFromDirDemo() {
 	outputDir := "./test/output"
-	srcDir := "./test/input/"
+	srcDir := "./test/input"
 	sliceSize := 17179869184
 
 	carFileName, err := meta_car.GenerateCarFromDir(outputDir, srcDir, int64(sliceSize))
@@ -131,15 +135,15 @@ func genCarFromDirDemo() {
 
 	/*
 		OUTPUT:
-		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input//test4    CID:QmcA1M4cUFeGZGTwTHAMPZrt6yXyRXkgDoBNeYQ3bhbuJD    UUID:      SIZE:49
+		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input/test4    CID:QmcA1M4cUFeGZGTwTHAMPZrt6yXyRXkgDoBNeYQ3bhbuJD    UUID:      SIZE:49
 
-		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input//dir1/dir2/test3    CID:QmcA1M4cUFeGZGTwTHAMPZrt6yXyRXkgDoBNeYQ3bhbuJD    UUID:      SIZE:49
+		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input/dir1/dir2/test3    CID:QmcA1M4cUFeGZGTwTHAMPZrt6yXyRXkgDoBNeYQ3bhbuJD    UUID:      SIZE:49
 
-		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input//dir1/test1    CID:QmTGVzSq5v5mzYUt9jpvQYLaPjsEFotUqCeLCp54p3PkSz    UUID:      SIZE:57
+		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input/dir1/test1    CID:QmTGVzSq5v5mzYUt9jpvQYLaPjsEFotUqCeLCp54p3PkSz    UUID:      SIZE:57
 
-		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input//test0    CID:QmTvhGdaTkpSWGjQGKcqrLRQqF6LJrfqMv9BWPYJ5tZ9Zp    UUID:      SIZE:57
+		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input/test0    CID:QmTvhGdaTkpSWGjQGKcqrLRQqF6LJrfqMv9BWPYJ5tZ9Zp    UUID:      SIZE:57
 
-		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input//dir1/dir2/test2    CID:QmeRAKJCjykxuU8NTjtWgeX59Zn8xcCp4NLF6jw3dCrAnX    UUID:      SIZE:57
+		2023-01-10T07:48:03.792Z        INFO    meta    ipfs/gencar.go:694      FILE:./test/input/dir1/dir2/test2    CID:QmeRAKJCjykxuU8NTjtWgeX59Zn8xcCp4NLF6jw3dCrAnX    UUID:      SIZE:57
 
 		2023-01-10T07:48:03.793Z        INFO    meta    meta-car/test.go:132    Create car file is:test/output/QmNMkmt5qQMYBhc1b3gUbkF3L7nNvLPKMnaJ4WP5jaYrMu.car
 	*/
@@ -185,5 +189,37 @@ func GetCarRootDemo() {
 		OUTPUT:
 		2023-01-10T07:48:03.794Z        INFO    meta    meta-car/test.go:184    Root CID is:QmdYHTLyw6WkWERej5HaC4NfxmwUynebEGq4NuVQ7reuGM
 	*/
+
+}
+
+func genCarFromDirExDemo() {
+	log.SetLogLevel("DEBUG")
+	outputDir := "./test/output"
+	srcDir := "./test/input"
+	sliceSize := 17179869184
+
+	info, err := meta_car.GenerateCarFromDirEx(outputDir, srcDir, int64(sliceSize), true)
+	if err != nil {
+		log.GetLog().Error("Create car file error:", err)
+		return
+	}
+
+	log.GetLog().Info("Build Car Info: ", info)
+
+}
+
+func extractFileFromCarDemo() {
+	log.SetLogLevel("DEBUG")
+	outputDir := "./test/output/restore"
+	srcCar := "./test/output/QmY7SuQCDgiQRwYcYYHbmpjiPZMExrC8Cc2X5z5dTp9Den.car"
+	inFile := "test255e1a161-da64-47f7-b763-f5fe8f30ac8d"
+
+	err := meta_car.ExtractFileFromCar(outputDir, srcCar, inFile)
+	if err != nil {
+		log.GetLog().Error("Create car file error:", err)
+		return
+	}
+
+	log.GetLog().Info("Restore Car Success.")
 
 }

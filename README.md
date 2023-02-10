@@ -6,7 +6,7 @@ meta-lib
 * [Generate CAR](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L73) from files or folders. 
 * [Get root CID](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L55) of a CAR file.
 * [List](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L19) original file(s) information in the CAR.
-* [Restore](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L138) the original file(s) in the CAR.
+* [Restore](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L239) the original file(s) in the CAR.
 
 ## Install
 
@@ -17,7 +17,7 @@ go get github.com/FogMeta/meta-lib/
 
 ## API Documentation
 
-### **func [GenerateCarFromFilesWithUuid](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L119)**
+### **func [GenerateCarFromFilesWithUuid](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L220)**
 ```go
 func GenerateCarFromFilesWithUuid(outputDir string, srcFiles []string, uuid []string, sliceSize int64) (carFile string, err error)
 ```
@@ -70,6 +70,24 @@ Outputs:
 `GenerateCarFromDir` returns the CAR which generated from the folder specified by the `srcDir` and limited by `sliceSize` then output CAR to the specified directory `outputDir`.
 
 
+### **func [GenerateCarFromDirEx](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L137)**
+```go
+func GenerateCarFromDirEx(outputDir string, srcDir string, sliceSize int64, withUUID bool) ([]CarInfo, error)
+```
+Parameters:
+
+    outputDir: directory where CAR file(s) will be generated.
+    srcDir: folder where source file(s) is(are) in.
+    sliceSize: bytes of each piece (default: 17179869184)
+    withUUID: create uuid that corresponds to srcFiles
+
+Outputs:
+
+    CarInfo: details of the source files included the CAR which generated .
+
+`GenerateCarFromDirEx` returns the CAR which generated from the folder specified by the `srcDir` and limited by `sliceSize` then output CAR to the specified directory `outputDir`.
+
+
 ### **func [GetCarRoot](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L55)**
 ```go
 func GetCarRoot(destCar string) (cid string, err error)
@@ -100,7 +118,7 @@ Outputs:
 `ListCarFile` returns list of FILE/CID/UUID/SIZE information in the CAR which is specified by the `destCar`.
 
 
-### **func [RestoreCar](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L138)**
+### **func [RestoreCar](https://github.com/FogMeta/meta-lib/blob/main/module/ipfs/interface.go#L239)**
 ```go
 func RestoreCar(outputDir string, srcCar string) (err error)
 ```
