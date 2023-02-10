@@ -1292,7 +1292,12 @@ func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) e
 		return os.Symlink(nd.Target, fpath)
 	case ipfsfiles.File:
 		if path.Base(fpath) == targetName {
-			log.GetLog().Info("export file to:", fpath)
+
+			err := os.MkdirAll(path.Dir(fpath), 0777)
+			if err != nil {
+				return err
+			}
+
 			f, err := createNewFile(fpath)
 			defer f.Close()
 			if err != nil {
@@ -1302,13 +1307,15 @@ func exportFileInCarByName(nd ipfsfiles.Node, fpath string, targetName string) e
 			if err != nil {
 				return err
 			}
+
+			log.GetLog().Info("export file to:", fpath)
 		}
 		return nil
 	case ipfsfiles.Directory:
-		err := os.Mkdir(fpath, 0777)
-		if err != nil {
-			return err
-		}
+		//err := os.Mkdir(fpath, 0777)
+		//if err != nil {
+		//	return err
+		//}
 
 		entries := nd.Entries()
 		for entries.Next() {
