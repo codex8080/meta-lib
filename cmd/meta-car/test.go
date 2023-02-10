@@ -20,7 +20,7 @@ func CreateCarFileTest(c *cli.Context) error {
 
 	//genCarFromDirExDemo()
 
-	//extractFileFromCarDemo()
+	extractFileFromCarDemo()
 
 	return nil
 }
@@ -210,7 +210,7 @@ func genCarFromDirExDemo() {
 
 func extractFileFromCarDemo() {
 	log.SetLogLevel("DEBUG")
-	outputDir := "./test/output/restore"
+	outputDir := "./test/output/restore1"
 	srcCar := "./test/output/QmY7SuQCDgiQRwYcYYHbmpjiPZMExrC8Cc2X5z5dTp9Den.car"
 	inFile := "test255e1a161-da64-47f7-b763-f5fe8f30ac8d"
 
