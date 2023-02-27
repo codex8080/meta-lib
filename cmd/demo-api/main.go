@@ -22,8 +22,8 @@ func main() {
 	//log.GetLog().Info("\n\n================================genCarFromDirsDemo================================")
 	//genCarFromDirsDemo()
 
-	log.GetLog().Info("\n\n================================restoreCarFromDirsDemo================================")
-	restoreCarFromDirsDemo()
+	//log.GetLog().Info("\n\n================================restoreCarFromDirsDemo================================")
+	//restoreCarFromDirsDemo()
 
 	return
 }
@@ -222,20 +222,5 @@ func GenCarFromDirs(outputDir string, srcDir []string, sliceSize int64) ([]CarIn
 }
 
 func restoreCarFromDirsDemo() {
-	outputDir := "../../test/output"
-	srcDir := []string{
-		"../../test/input1/",
-		"../../test/input2/",
-		"../../test/input3/",
-	}
-	sliceSize := 17179869184
-
-	carInfos, err := meta_car.RestoreCar(outputDir, srcDir, int64(sliceSize))
-	if err != nil {
-		log.GetLog().Error("Create car file error:", err)
-		return
-	}
-
-	log.GetLog().Infof("%+v", carInfos)
-
+	//
 }
