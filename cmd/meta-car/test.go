@@ -25,21 +25,6 @@ func CreateCarFileTest(c *cli.Context) error {
 	return nil
 }
 
-func carFileTest() {
-	destFile := "./test/output/test.car"
-	srcFiles := []string{
-		"./test/input/test0",
-		"./test/input/dir1/test1",
-		"./test/input/dir1/dir2/test2",
-	}
-
-	if err := meta_car.CreateCarFile(destFile, srcFiles); err != nil {
-		log.GetLog().Error("Test create car file error:", err)
-		return
-	}
-
-}
-
 func genCarWithUuidDemo() {
 	outputDir := "./test/output"
 	srcFiles := []string{
