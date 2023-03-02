@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	cid "github.com/ipfs/go-cid"
@@ -276,4 +277,119 @@ func GetFileListEx(args []string) (fileList []string, totalSize uint64, err erro
 	}
 
 	return
+}
+
+func IsFileExists(filePath, fileName string) bool {
+	fileFullPath := filepath.Join(filePath, fileName)
+	_, err := os.Stat(fileFullPath)
+
+	if err != nil {
+		log.GetLog().Error(err)
+		return false
+	}
+
+	return true
+}
+
+func IsStrEmpty(str *string) bool {
+	if str == nil || *str == "" {
+		return true
+	}
+
+	strTrim := strings.Trim(*str, " ")
+	return len(strTrim) == 0
+}
+
+const (
+	PATH_TYPE_NOT_EXIST = 0 //this path not exists
+	PATH_TYPE_FILE      = 1 //file
+	PATH_TYPE_DIR       = 2 //directory
+	PATH_TYPE_UNKNOWN   = 3 //unknown path type
+)
+
+func GetPathType(dirFullPath string) int {
+	fi, err := os.Stat(dirFullPath)
+
+	if err != nil {
+		log.GetLog().Error(err)
+		return PATH_TYPE_NOT_EXIST
+	}
+
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
+		return PATH_TYPE_DIR
+	case mode.IsRegular():
+		return PATH_TYPE_FILE
+	default:
+		return PATH_TYPE_UNKNOWN
+	}
+}
+
+func IsDirExists(dir string) bool {
+	if IsStrEmpty(&dir) {
+		err := fmt.Errorf("dir is not provided")
+		log.GetLog().Error(err)
+		return false
+	}
+
+	if GetPathType(dir) != PATH_TYPE_DIR {
+		return false
+	}
+
+	return true
+}
+
+func CreateDir(dir string) error {
+	if len(dir) == 0 {
+		err := fmt.Errorf("dir is not provided")
+		log.GetLog().Error(err)
+		return err
+	}
+
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		err := fmt.Errorf("%s, failed to create output dir:%s", err.Error(), dir)
+		log.GetLog().Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func CreateDirIfNotExists(dir, dirName string) error {
+	if IsStrEmpty(&dir) {
+		err := fmt.Errorf("%s directory is required", dirName)
+		log.GetLog().Error(err)
+		return err
+	}
+
+	if IsDirExists(dir) {
+		return nil
+	}
+
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		err := fmt.Errorf("failed to create %s directory:%s,%s", dirName, dir, err.Error())
+		log.GetLog().Error(err)
+		return err
+	}
+
+	log.GetLog().Info(dirName, " directory: ", dir, " created")
+	return nil
+}
+
+func CheckDirExists(dir, dirName string) error {
+	if IsStrEmpty(&dir) {
+		err := fmt.Errorf("%s directory is required", dirName)
+		log.GetLog().Error(err)
+		return err
+	}
+
+	if !IsDirExists(dir) {
+		err := fmt.Errorf("%s directory:%s not exists", dirName, dir)
+		log.GetLog().Error(err)
+		return err
+	}
+
+	return nil
 }

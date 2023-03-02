@@ -125,6 +125,13 @@ func CarTo(carPath, outputDir string, parallel int) {
 				log.GetLog().Warn(path, ", it's not a CAR file, skip it")
 				return nil
 			}
+
+			fpPath := "/tmp/footprint/"
+			if util.IsFileExists(fpPath, fi.Name()) {
+				log.GetLog().Warn(path, ", has restored, skip it")
+				return nil
+			}
+
 			workerCh <- func() {
 				log.GetLog().Info(path)
 				root, err := Import(ctx, path, bs2)
@@ -147,6 +154,20 @@ func CarTo(carPath, outputDir string, parallel int) {
 					log.GetLog().Error("NodeWriteTo error, ", err)
 				}
 			}
+
+			// Create footprint
+			if !util.IsDirExists(fpPath) {
+				util.CreateDir(fpPath)
+			}
+			fp, err := os.Create(filepath.Join(fpPath, fi.Name()))
+			if err != nil {
+				log.GetLog().Error(path, ", create footprint error: ", err)
+
+				return nil
+			}
+			defer fp.Close()
+			log.GetLog().Info(path, ", create footprint.")
+
 			return nil
 		})
 		if err != nil {
