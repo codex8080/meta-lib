@@ -284,7 +284,7 @@ func IsFileExists(filePath, fileName string) bool {
 	_, err := os.Stat(fileFullPath)
 
 	if err != nil {
-		log.GetLog().Error(err)
+		//log.GetLog().Error(err)
 		return false
 	}
 

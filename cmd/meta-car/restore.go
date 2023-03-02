@@ -159,10 +159,10 @@ func CarTo(carPath, outputDir string, parallel int) {
 			if !util.IsDirExists(fpPath) {
 				util.CreateDir(fpPath)
 			}
+
 			fp, err := os.Create(filepath.Join(fpPath, fi.Name()))
 			if err != nil {
 				log.GetLog().Error(path, ", create footprint error: ", err)
-
 				return nil
 			}
 			defer fp.Close()
