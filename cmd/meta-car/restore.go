@@ -41,6 +41,67 @@ func Restore(c *cli.Context) error {
 	return nil
 }
 
+func RestoreEx(c *cli.Context) error {
+	parallel := c.Int("parallel")
+	outputDir := c.String("output-dir")
+	carPath := c.String("car-path")
+	if parallel <= 0 {
+		parallel = 1
+	}
+
+	workerCh := make(chan func())
+	go func() {
+		defer close(workerCh)
+		err := filepath.Walk(carPath, func(path string, fi os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			workerCh <- func() {
+				CarTo(path, outputDir, 1)
+				fmt.Println("One completed:", path)
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			log.GetLog().Error("Walk car path failed, ", err)
+		}
+	}()
+
+	limitCh := make(chan struct{}, parallel)
+	wg := sync.WaitGroup{}
+	total := uint64(0)
+	func() {
+		for {
+			select {
+			case taskFunc, ok := <-workerCh:
+				if !ok {
+					return
+				}
+				total++
+				limitCh <- struct{}{}
+				wg.Add(1)
+				go func() {
+					defer func() {
+						<-limitCh
+						wg.Done()
+
+					}()
+					taskFunc()
+				}()
+			}
+		}
+	}()
+	wg.Wait()
+	fmt.Println("CarTo completed! total task  is ", total)
+
+	Merge(outputDir, parallel)
+	fmt.Println("Merge completed!")
+	return nil
+}
+
 func Import(ctx context.Context, path string, st car.Store) (cid.Cid, error) {
 	f, err := os.Open(path)
 	if err != nil {
