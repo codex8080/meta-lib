@@ -56,6 +56,10 @@ func RestoreEx(c *cli.Context) error {
 			if err != nil {
 				return err
 			}
+			
+			if fi.IsDir() {
+				return nil
+			}
 
 			workerCh <- func() {
 				CarTo(path, outputDir, 1)
